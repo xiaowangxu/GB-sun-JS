@@ -1,0 +1,94 @@
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GB sun JS</title>
+</head>
+
+<body>
+	<div id="container">
+
+	</div>
+</body>
+
+<style>
+	body {
+		margin: 0px;
+		height: 100%;
+		width: 100%;
+	}
+
+	#container {
+		width: 100%;
+		height: 100%;
+		/* padding: auto; */
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+
+	#container>canvas {
+		width: 500px;
+		height: 500px;
+	}
+</style>
+
+<script type="module">
+	import * as SUN from './GBsun.js'
+
+	let gameconsole = new SUN.sunConsole(192, 192)
+
+	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
+
+	let font = SUN.Font.DEFAULT()
+
+	gameconsole.init = (sc) => {
+		// for (let i = 0; i < 4; i++) {
+		// 	for (let j = 0; j < 4; j++) {
+		// 		let id = i * 4 + j
+		// 		const SIZE = sc.Renderer.size.x / 4
+		// 		sc.Renderer.draw_Rect(SUN.Rect.XYWH(j * SIZE, i * SIZE, SIZE, SIZE), SUN.Color.PICO(id))
+		// 	}
+		// }
+		// sc.Renderer.draw_Char(50, 50, SUN.Char.DEFAULT('B'), SUN.Color.PICO(0))
+
+	}
+
+	gameconsole.action = (sc, delta) => {
+		for (let key in sc.Keyboard.keymap) {
+			if (sc.Keyboard.keymap[key].continue) {
+				if (key === 'Enter') {
+					str += '\n'
+				}
+				else {
+					str += key
+				}
+			}
+		}
+	}
+
+	let str = ''
+
+	gameconsole.render = (sc, delta) => {
+		// sc.Renderer.draw_Pixel(, SUN.Color.PICO(3))
+		sc.Renderer.clear()
+
+		// sc.Renderer.draw_Sprite(sc.Mouse.position.x, sc.Mouse.position.y, SUN.Sprite.COLOR_PALETTE_PICO())
+		// sc.Renderer.draw_String(0, 10, 'AaBbCcDdEeFfGg', font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(4))
+		// sc.Renderer.draw_String(0, 20, 'HhIiJjKkLlMmNn', font, SUN.Color.COLOR('WHITE'))
+		// sc.Renderer.draw_String(0, 30, 'OoPpQqRrSsTt', font, SUN.Color.COLOR('WHITE'))
+		// sc.Renderer.draw_String(0, 40, 'UuVvWwXxYyZz', font, SUN.Color.COLOR('WHITE'))
+		// sc.Renderer.draw_String(0, 50, '0123456789', font, SUN.Color.COLOR('WHITE'))
+
+		// sc.Renderer.draw_String(0, 60, 'abcd', font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(14))
+		// sc.Renderer.draw_String(0, 80, 'HELLO WORLD', font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(14))
+
+		sc.Renderer.draw_String(0, 9, str, font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(5), 1, 0, 1)
+	}
+
+	gameconsole.run()
+</script>
+
+</html>
