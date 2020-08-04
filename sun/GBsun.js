@@ -1,6 +1,26 @@
 export const Fn = {
 	clamp(n, min, max) {
 		return Math.max(min, Math.min(max, n))
+	},
+
+	is_ASCII(id) {
+		// console.log(id)
+		if (id === 'Enter')
+			return true
+		else
+			return ASCII_CHAR.includes(id)
+	},
+
+	get_Char(id) {
+		switch (id) {
+			case 'Enter':
+				return '\n'
+			default:
+				if (this.is_ASCII(id)) {
+					return id
+				}
+				break;
+		}
 	}
 }
 
@@ -16,6 +36,10 @@ export class Rect {
 	constructor(position, size) {
 		this.position = position
 		this.size = size
+	}
+
+	inside(vector2) {
+		return (this.position.x <= vector2.x && vector2.x < this.position.x + this.size.x && this.position.y <= vector2.y && vector2.y < this.position.y + this.size.y)
 	}
 
 	static XYWH(x, y, width, height) {
@@ -140,6 +164,20 @@ export class Sprite {
 		}
 	}
 
+	set_Pixel(x, y, color) {
+		if (x < 0 || x >= this.width || y < 0 || y >= this.height) return
+		this.image[y][x] = color
+	}
+
+
+	get_Rect() {
+		return Rect.XYWH(0, 0, this.width, this.height)
+	}
+
+	static PICO(colorarray) {
+		let array = colorarray
+	}
+
 	static COLOR_PALETTE_PICO() {
 		return new Sprite(
 			[[Color.PICO(0), Color.PICO(1), Color.PICO(2), Color.PICO(3)],
@@ -159,6 +197,10 @@ export class Char {
 		for (let i = 0; i < pointarray.length; i++) {
 			this.width = Math.max(this.width, pointarray[i].length)
 		}
+	}
+
+	get_Rect() {
+		return Rect.XYWH(0, 0, this.width, this.height)
 	}
 
 	static DEFAULT(id) {
@@ -393,13 +435,13 @@ export class Char {
 			case 'O':
 				return new Char(
 					[
-						[0, 1, 1, 0],
-						[1, 0, 0, 1],
-						[1, 0, 0, 1],
-						[1, 0, 0, 1],
-						[1, 0, 0, 1],
-						[1, 0, 0, 1],
-						[0, 1, 1, 0]
+						[0, 1, 1, 1, 0],
+						[1, 0, 0, 0, 1],
+						[1, 0, 0, 0, 1],
+						[1, 0, 0, 0, 1],
+						[1, 0, 0, 0, 1],
+						[1, 0, 0, 0, 1],
+						[0, 1, 1, 1, 0]
 					],
 					0, 0
 				)
@@ -677,6 +719,141 @@ export class Char {
 					],
 					0, 0
 				)
+
+			case '.':
+				return new Char(
+					[
+						[1]
+					],
+					-6, 0
+				)
+
+			case ',':
+				return new Char(
+					[
+						[0, 0, 1, 0],
+						[0, 1, 0, 0]
+					],
+					-5, 0
+				)
+
+			case '<':
+				return new Char(
+					[
+						[0, 0, 0, 0],
+						[0, 0, 1, 0],
+						[0, 1, 0, 0],
+						[1, 0, 0, 0],
+						[0, 1, 0, 0],
+						[0, 0, 1, 0],
+						[0, 0, 0, 0]
+					],
+					0, 0
+				)
+			case '>':
+				return new Char(
+					[
+						[0, 0, 0, 0],
+						[0, 1, 0, 0],
+						[0, 0, 1, 0],
+						[0, 0, 0, 1],
+						[0, 0, 1, 0],
+						[0, 1, 0, 0],
+						[0, 0, 0, 0]
+					],
+					0, 0
+				)
+			case '(':
+				return new Char(
+					[
+						[0, 1, 0],
+						[1, 0, 0],
+						[1, 0, 0],
+						[1, 0, 0],
+						[1, 0, 0],
+						[1, 0, 0],
+						[0, 1, 0]
+					],
+					0, 0
+				)
+			case ')':
+				return new Char(
+					[
+						[0, 1, 0],
+						[0, 0, 1],
+						[0, 0, 1],
+						[0, 0, 1],
+						[0, 0, 1],
+						[0, 0, 1],
+						[0, 1, 0]
+					],
+					0, 0
+				)
+			case '+':
+				return new Char(
+					[
+						[0, 0, 0, 0, 0],
+						[0, 0, 1, 0, 0],
+						[0, 0, 1, 0, 0],
+						[1, 1, 1, 1, 1],
+						[0, 0, 1, 0, 0],
+						[0, 0, 1, 0, 0],
+						[0, 0, 0, 0, 0]
+					],
+					0, 0
+				)
+			case '-':
+				return new Char(
+					[
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[1, 1, 1, 1],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0]
+					],
+					0, 0
+				)
+			case '=':
+				return new Char(
+					[
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[1, 1, 1, 1],
+						[0, 0, 0, 0],
+						[1, 1, 1, 1],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0]
+					],
+					0, 0
+				)
+			case '*':
+				return new Char(
+					[
+						[0, 0, 0, 0, 0],
+						[1, 0, 0, 0, 1],
+						[0, 1, 0, 1, 0],
+						[0, 0, 1, 0, 0],
+						[0, 1, 0, 1, 0],
+						[1, 0, 0, 0, 1],
+						[0, 0, 0, 0, 0]
+					],
+					0, 0
+				)
+			case '/':
+				return new Char(
+					[
+						[0, 0, 0, 1, 0],
+						[0, 0, 0, 1, 0],
+						[0, 0, 1, 0, 0],
+						[0, 0, 1, 0, 0],
+						[0, 0, 1, 0, 0],
+						[0, 1, 0, 0, 0],
+						[0, 1, 0, 0, 0]
+					],
+					0, 0
+				)
 			case '\n':
 				return new Char(
 					[
@@ -685,6 +862,32 @@ export class Char {
 						[1, 1, 1]
 					],
 					-4, 0
+				)
+			case '◼':
+				return new Char(
+					[
+						[1, 1, 1, 1],
+						[1, 1, 1, 1],
+						[1, 1, 1, 1],
+						[1, 1, 1, 1],
+						[1, 1, 1, 1],
+						[1, 1, 1, 1],
+						[1, 1, 1, 1]
+					],
+					0, 0
+				)
+			case '◻':
+				return new Char(
+					[
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0],
+						[0, 0, 0, 0]
+					],
+					0, 0
 				)
 			default:
 				return new Char(
@@ -704,9 +907,10 @@ export class Char {
 }
 
 export class Font {
-	constructor(space = 2) {
+	constructor(space = 2, returnheight = 8) {
 		this.charmap = {}
 		this.space = space
+		this.returnheight = returnheight
 		this.maxheight = 0
 	}
 
@@ -731,7 +935,7 @@ export class Font {
 		) : this.charmap[id]
 	}
 
-	get_StringRect(string, split = 1) {
+	get_StringRect(string, split = 1, lineheight = 0) {
 		let width = 0
 		let height = 0
 		string.split('').forEach((id, idx, arr) => {
@@ -739,22 +943,39 @@ export class Font {
 				width += this.space
 
 			}
+			else if (id === '\n') {
+				height = Math.max(height, this.returnheight)
+
+			}
 			else {
 				let char = this.get(id)
 				height = Math.max(height, char.height)
 				width += char.width
 			}
-
-			if (idx !== arr.length - 1) {
-				width += split
-			}
+			width += split
 		})
-		return Rect.XYWH(0, 0, width, height)
+		return Rect.XYWH(0, 0, width - split, string === '' ? height : height + lineheight)
+	}
+
+	get_MultiStringRect(string, split = 1, lineheight = 0, linesplit = 1) {
+		let lines = string.split('\n')
+		let width = 0
+		let height = 0
+		lines.forEach((line) => {
+			if (line === '') {
+				height += this.returnheight + lineheight + linesplit
+				return
+			}
+			let size = this.get_StringRect(line).size
+			width = Math.max(width, size.x)
+			height += size.y + lineheight + linesplit
+		})
+		return Rect.XYWH(0, 0, width, height - linesplit - lineheight)
 	}
 
 	static DEFAULT() {
 		let font = new Font()
-		let str = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789\n'
+		let str = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()_\n'
 		str.split('').forEach((id) => {
 			font.add(id, Char.DEFAULT(id))
 		})
@@ -769,6 +990,7 @@ class Renderer {
 	constructor(width, height) {
 		this.canvas = document.createElement('canvas')
 		this.canvas.style.imageRendering = 'pixelated'
+		this.canvas.style.cursor = 'none'
 		this.canvas.width = width
 		this.canvas.height = height
 		this.canvas_context = this.canvas.getContext("2d")
@@ -785,21 +1007,26 @@ class Renderer {
 	}
 
 	draw_Pixel(x, y, color) {
+		if (x < 0 || x >= this.size.x || y < 0 || y >= this.size.y) return
 		this.canvas_context.fillStyle = color.get_Color()
 		this.canvas_context.fillRect(x, y, 1, 1)
+		return Rect.XYWH(x, y, 1, 1)
 	}
 
 	draw_Rect(rect, color) {
 		this.canvas_context.fillStyle = color.get_Color()
 		this.canvas_context.fillRect(rect.position.x, rect.position.y, rect.size.x, rect.size.y)
+		return rect
 	}
 
-	draw_Sprite(x, y, sprite) {
+	draw_Sprite(x, y, sprite, scale = 1) {
 		for (let i = 0; i < sprite.height; i++) {
 			for (let j = 0; j < sprite.width; j++) {
-				this.draw_Pixel(x + j, y + i, sprite.image[i][j])
+				this.draw_Rect(Rect.XYWH(x + j * scale, y + i * scale, scale, scale), sprite.image[i][j])
+				// this.draw_Pixel(x + j, y + i, sprite.image[i][j])
 			}
 		}
+		return Rect.XYWH(x, y, sprite.width * scale, sprite.height * scale)
 	}
 
 	draw_Char(x, y, char, color, background = false, backgroundcolor) {
@@ -815,14 +1042,15 @@ class Renderer {
 				}
 			}
 		}
+		return Rect.XYWH(x, y, char.width, char.height)
 	}
 
-	draw_String(x, y, string, font, color, background = false, backgroundcolor, split = 1, lineheight = 0, border = 0) {
+	draw_String(x, y, string, font, color = Color.COLOR('WHITE'), split = 1, lineheight = 0, border = 0, backgroundcolor = null) {
 		if (string === '') return
 		let lastx = 0
-		let rect = font.get_StringRect(string)
-		if (background) {
-			this.draw_Rect(Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + lineheight + border * 2), backgroundcolor)
+		let rect = font.get_StringRect(string, split, lineheight)
+		if (backgroundcolor !== null) {
+			this.draw_Rect(Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2), backgroundcolor)
 		}
 		string.split('').forEach((id, idx) => {
 			if (id === ' ') {
@@ -830,14 +1058,69 @@ class Renderer {
 				return
 			}
 			let char = font.get(id)
-			this.draw_Char(x + border + lastx, y + border - font.maxheight + rect.size.y + lineheight, font.get(id), color)
+			this.draw_Char(x + border + lastx, y + border - font.maxheight + rect.size.y, font.get(id), color)
 			lastx += char.width + split
 		})
+		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
+	}
+
+	draw_MultiString(x, y, string, font, color = Color.COLOR('WHITE'), split = 1, lineheight = 0, linesplit = 1, border = 0, backgroundcolor = null, linebackgroundcolor = null) {
+		let lines = string.split('\n')
+		let starty = 0
+		let rect = font.get_MultiStringRect(string, split, lineheight, linesplit)
+		if (backgroundcolor !== null) {
+			this.draw_Rect(Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + lineheight + border * 2), Color.PICO(10))
+		}
+		lines.forEach((line) => {
+			if (line === '') {
+				starty += font.returnheight + lineheight + linesplit
+				return
+			}
+			let height = font.get_StringRect(line).size.y
+			this.draw_String(x, y + starty, line, font, color, split, lineheight, border, linebackgroundcolor)
+			starty += height + lineheight + linesplit
+		})
+		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
+	}
+
+	draw_Richtext(x, y, array, split = 1, lineheight = 0, linesplit = 1) {
+		let startx = 0
+		let starty = 0
+		let width = 0
+		let height = 0
+		array.forEach((item) => {
+			let content = item[0]
+			let style = item[1]
+			let rect = Rect.XYWH(0, 0, 0, 0)
+			if (content === undefined) {
+				startx = 0
+				starty += height + linesplit + lineheight
+				height = 0
+				return
+			}
+			if (typeof (content) === 'string') {
+				let font = DEFAULT_FONT
+				let color = Color.COLOR('white')
+				if (style !== undefined) {
+					if (style.font !== undefined) font = style.font
+					if (style.color !== undefined) color = style.color
+				}
+				rect = this.draw_MultiString(x + startx, y + starty, content, font, color)
+			}
+			else if (content instanceof Sprite) {
+				rect = this.draw_Sprite(x + startx, y + starty, content, style.scale)
+			}
+			startx += rect.size.x + split
+			width = Math.max(startx - split, width)
+			height = Math.max(rect.size.y, height)
+		})
+		return Rect.XYWH(x, y, width, starty + height + lineheight)
 	}
 }
 
 class MouseInput {
 	constructor(canvas) {
+		this.keymap = {}
 		this.position = new Vector2(-1, -1)
 		this.canvas = canvas
 
@@ -845,7 +1128,24 @@ class MouseInput {
 			this.mousemove(event)
 		}
 
+		this.on_mousedown = () => {
+			this.mousedown(event)
+		}
+
+		this.on_mouseup = () => {
+			this.mouseup(event)
+		}
+
+		this.on_mouseout = () => {
+			this.mouseout(event)
+		}
+
+
 		this.canvas.get_Canvas().addEventListener('mousemove', this.on_mousemove)
+		this.canvas.get_Canvas().addEventListener('mousedown', this.on_mousedown)
+		this.canvas.get_Canvas().addEventListener('mouseup', this.on_mouseup)
+		this.canvas.get_Canvas().addEventListener('mouseout', this.on_mouseout)
+		this.canvas.get_Canvas().addEventListener('contextmenu', () => { event.returnValue = false; return false; })
 	}
 
 	mousemove(event) {
@@ -856,7 +1156,33 @@ class MouseInput {
 		this.position.x = Math.floor((event.x - screenrect.x) / screenrect.width * width)
 		this.position.y = Math.floor((event.y - screenrect.y) / screenrect.height * height)
 	}
+
+	mousedown(event) {
+		if (this.keymap[event.button] === undefined) {
+			this.keymap[event.button] = {
+				once: true
+			}
+		}
+	}
+
+	mouseup(event) {
+		if (this.keymap[event.button] !== undefined) {
+			delete this.keymap[event.button]
+		}
+	}
+
+	mouseout(event) {
+		this.keymap = {}
+	}
+
+	loopend() {
+		for (let key in this.keymap) {
+			this.keymap[key].once = false
+		}
+	}
 }
+
+const ASCII_CHAR = (' AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()_').split('')
 
 class KeyboardInput {
 	constructor() {
@@ -896,12 +1222,30 @@ class KeyboardInput {
 			this.keymap[key].once = false
 		}
 	}
+
+	on_Once(id) {
+		return this.keymap[id] !== undefined && this.keymap[id].once
+	}
+
+	on_Continue(id) {
+		return this.keymap[id] !== undefined && this.keymap[id].continue
+	}
+
 }
 
-const DEFAULT_FONT = Font.DEFAULT()
+export const DEFAULT_FONT = Font.DEFAULT()
+const MOUSE_CURSOR = new Sprite([
+	[Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('     ')],
+	[Color.COLOR('black'), Color.COLOR('white'), Color.COLOR('white'), Color.COLOR('white'), Color.COLOR('black'), Color.COLOR('     ')],
+	[Color.COLOR('black'), Color.COLOR('white'), Color.COLOR('white'), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('     ')],
+	[Color.COLOR('black'), Color.COLOR('white'), Color.COLOR('black'), Color.COLOR('white'), Color.COLOR('black'), Color.COLOR('black')],
+	[Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('white'), Color.COLOR('black')],
+	[Color.COLOR('     '), Color.COLOR('     '), Color.COLOR('     '), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black')],])
 
 export class sunConsole {
-	constructor(width, height) {
+	constructor(width, height, clear = true, mouse = false) {
+		this.cursor = mouse
+		this.clear = clear
 		this.Renderer = new Renderer(width, height)
 		this.Mouse = new MouseInput(this.Renderer)
 		this.Keyboard = new KeyboardInput()
@@ -928,9 +1272,11 @@ export class sunConsole {
 	}
 
 	sys(sunconsole, delta) {
-		// console.log(JSON.stringify(this.Keyboard.keymap))
-		this.Renderer.draw_String(0, 0, "FPS " + Math.round(1000 / delta), DEFAULT_FONT, Color.COLOR('WHITE'), true, Color.PICO(5), 1, 0, 1)
+		// console.log((1000 / delta))
+		// this.Renderer.draw_String(0, 0, "FPS " + Math.round(1000 / delta), DEFAULT_FONT, Color.COLOR('WHITE'), true, Color.PICO(5), 1, 0, 1)
+		if (this.cursor) this.Renderer.draw_Sprite(this.Mouse.position.x - 1, this.Mouse.position.y - 1, MOUSE_CURSOR)
 		this.Keyboard.loopend()
+		this.Mouse.loopend()
 	}
 
 	get_ConsoleDOM() {
@@ -945,6 +1291,9 @@ export class sunConsole {
 
 			sunconsole.event()
 			sunconsole.action(sunconsole, delta)
+			if (sunconsole.clear) {
+				sunconsole.Renderer.clear()
+			}
 			sunconsole.render(sunconsole, delta)
 			sunconsole.sys(sunconsole, delta)
 		}

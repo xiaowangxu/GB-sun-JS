@@ -38,7 +38,7 @@
 <script type="module">
 	import * as SUN from './GBsun.js'
 
-	let gameconsole = new SUN.sunConsole(192, 192)
+	let gameconsole = new SUN.sunConsole(256, 256)
 
 	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
 
@@ -54,38 +54,194 @@
 		// }
 		// sc.Renderer.draw_Char(50, 50, SUN.Char.DEFAULT('B'), SUN.Color.PICO(0))
 
+
 	}
 
-	gameconsole.action = (sc, delta) => {
-		for (let key in sc.Keyboard.keymap) {
-			if (sc.Keyboard.keymap[key].continue) {
-				if (key === 'Enter') {
-					str += '\n'
-				}
-				else {
-					str += key
-				}
-			}
+	class PixelIndicate {
+		constructor() {
+			this.position = new SUN.Vector2(0, 0)
+
 		}
 	}
 
-	let str = ''
+	class SpriteEditor {
+		constructor() {
+			this.colorpalettesprite = SUN.Sprite.COLOR_PALETTE_PICO()
+			this.colorpaletterects = []
+			this.colorpalettepos = new SUN.Vector2(4, 54)
+			this.size = 16
+			this.canvaspos = new SUN.Vector2(75, 42)
+			this.canvasrects = []
+			this.canvassize = 14
+			this.sprite = new SUN.Sprite([[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
+			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')]])
+			for (let i = 0; i < 4; i++) {
+				for (let j = 0; j < 4; j++) {
+					this.colorpaletterects.push({
+						id: i * 4 + j,
+						rect: SUN.Rect.XYWH(this.colorpalettepos.x + j * this.size, this.colorpalettepos.y + i * this.size, this.size, this.size)
+					})
+				}
+			}
+			for (let i = 0; i < 8; i++) {
+				for (let j = 0; j < 8; j++) {
+					this.canvasrects.push({
+						x: j,
+						y: i,
+						rect: SUN.Rect.XYWH(this.canvaspos.x + j * this.canvassize, this.canvaspos.y + i * this.canvassize, this.canvassize, this.canvassize)
+					})
+				}
+			}
+			this.currentcolorid = 0
+		}
+
+		update(sc, delta) {
+			let mousepos = sc.Mouse.position
+			this.colorpaletterects.forEach((item) => {
+				if (item.rect.inside(mousepos)) {
+					if (sc.Mouse.keymap[0] !== undefined && sc.Mouse.keymap[0].once)
+						this.currentcolorid = item.id
+				}
+			})
+			this.canvasrects.forEach((item) => {
+				if (item.rect.inside(mousepos)) {
+					if (sc.Mouse.keymap[0] !== undefined) {
+						this.sprite.set_Pixel(item.x, item.y, SUN.Color.PICO(this.currentcolorid))
+					}
+					if (sc.Mouse.keymap[2] !== undefined) {
+						this.sprite.set_Pixel(item.x, item.y, SUN.Color.COLOR(''))
+					}
+				}
+			})
+		}
+
+		draw(sc, delta) {
+			sc.Renderer.clear(SUN.Color.PICO(1))
+			let size = sc.Renderer.size
+			// console.log(size)
+			sc.Renderer.draw_Rect(SUN.Rect.XYWH(0, 0, size.x, 13), SUN.Color.PICO(3))
+
+			sc.Renderer.draw_String(0, 0, 'SPRITE EDITOR', SUN.DEFAULT_FONT, SUN.Color.COLOR("WHITE"), true, SUN.Color.PICO(3), 1, 0, 3)
+			sc.Renderer.draw_String(2, 39, 'COLOR PALETTE', SUN.DEFAULT_FONT, SUN.Color.COLOR("WHITE"), true, SUN.Color.PICO(5), 1, 0, 2)
+			sc.Renderer.draw_String(2, 122, 'COLOR ID ' + this.currentcolorid, SUN.DEFAULT_FONT, SUN.Color.COLOR("WHITE"), true, SUN.Color.PICO(5), 1, 0, 2)
+
+			sc.Renderer.draw_Rect(SUN.Rect.XYWH(this.colorpalettepos.x - 2, this.colorpalettepos.y - 2, 4 * this.size + 4, 4 * this.size + 4), SUN.Color.PICO(5))
+
+			this.colorpaletterects.forEach((item) => {
+				sc.Renderer.draw_Rect(item.rect, SUN.Color.PICO(item.id))
+			})
+			sc.Renderer.draw_Rect(SUN.Rect.XYWH(72, 39, 118, 118), SUN.Color.PICO(5))
+			sc.Renderer.draw_Rect(SUN.Rect.XYWH(74, 41, 114, 114), SUN.Color.RGB8(150, 150, 150))
+			sc.Renderer.draw_Sprite(this.canvaspos.x, this.canvaspos.y, this.sprite, 14)
+
+		}
+	}
+
+	class Console {
+		constructor() {
+			this.str = ''
+			this.list = []
+			const font = SUN.Font.DEFAULT()
+			this.time = 0
+		}
+
+		exec_Instruction(instruction) {
+			this.list.push(['>> ' + instruction, { font: font }])
+			this.list.push([])
+			this.list.push(['◻◻ ', { font: font }])
+			if (instruction === 'PICO PALETTE') {
+				this.list.push([SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 8 }])
+				this.list.push([])
+			}
+			else if (instruction === 'ABOUT') {
+				this.list.push(['GAMEBOY SUN JS', { font: font }])
+				this.list.push([])
+				this.list.push(['MADE BY SUN', { font: font }])
+				this.list.push([])
+			}
+			else if (instruction === 'CLS') {
+				this.list = []
+			}
+			else {
+				try {
+					let ans = eval(instruction)
+					this.list.push([JSON.stringify(ans).toUpperCase()])
+					this.list.push([])
+				}
+				catch (error) {
+					this.list.push(['UNKNOWN INSTRUCTION', { color: SUN.Color.RGB8(255, 0, 0) }])
+					this.list.push([])
+				}
+			}
+			this.str = ''
+		}
+
+		update(sc, delta) {
+			for (let key in sc.Keyboard.keymap) {
+				if (SUN.Fn.is_ASCII(key)) {
+					if (sc.Keyboard.on_Continue(key)) {
+						// console.log(SUN.Fn.get_Char(key))
+						if (key === 'Enter') {
+							console.log("Instruction", this.str)
+							this.exec_Instruction(this.str)
+						}
+						else
+							this.str += SUN.Fn.get_Char(key)
+					}
+				}
+				else if (key === 'Backspace') {
+					if (sc.Keyboard.on_Continue(key)) {
+						// console.log(SUN.Fn.get_Char(key))
+						this.str = this.str.substr(0, this.str.length - 1)
+					}
+				}
+			}
+		}
+
+		render(sc, delta) {
+			let cursor
+			if (this.time >= 0) {
+				cursor = '◻'
+			}
+			if (this.time >= 500) {
+				cursor = '◼'
+			}
+			if (this.time >= 1000) {
+				cursor = '◻'
+				this.time = 0
+			}
+			// let size = font.get_MultiStringRect('>> ' + this.str + cursor, 1, 0, 2).size
+			// sc.Renderer.draw_Rect(size, SUN.Color.PICO(10))
+			// sc.Renderer.draw_MultiString(4, sc.Renderer.size.y - 4 - size.y - 2, '>> ' + this.str + cursor, font, SUN.Color.COLOR('WHITE'), 1, 0, 2, 1, null, SUN.Color.PICO(5))
+			let array = this.list.filter(() => { return true })
+			array.push(['>> ' + this.str + cursor, { font: font }])
+			sc.Renderer.draw_Richtext(4, 4, array, 1, 0, 3)
+			this.time += delta
+		}
+	}
+
+	// let spriteeditor = new SpriteEditor()
+	let sunconsole = new Console()
+
+	gameconsole.action = (sc, delta) => {
+		sunconsole.update(sc, delta)
+	}
+
 
 	gameconsole.render = (sc, delta) => {
-		// sc.Renderer.draw_Pixel(, SUN.Color.PICO(3))
-		sc.Renderer.clear()
-
-		// sc.Renderer.draw_Sprite(sc.Mouse.position.x, sc.Mouse.position.y, SUN.Sprite.COLOR_PALETTE_PICO())
-		// sc.Renderer.draw_String(0, 10, 'AaBbCcDdEeFfGg', font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(4))
-		// sc.Renderer.draw_String(0, 20, 'HhIiJjKkLlMmNn', font, SUN.Color.COLOR('WHITE'))
-		// sc.Renderer.draw_String(0, 30, 'OoPpQqRrSsTt', font, SUN.Color.COLOR('WHITE'))
-		// sc.Renderer.draw_String(0, 40, 'UuVvWwXxYyZz', font, SUN.Color.COLOR('WHITE'))
-		// sc.Renderer.draw_String(0, 50, '0123456789', font, SUN.Color.COLOR('WHITE'))
-
-		// sc.Renderer.draw_String(0, 60, 'abcd', font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(14))
-		// sc.Renderer.draw_String(0, 80, 'HELLO WORLD', font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(14))
-
-		sc.Renderer.draw_String(0, 9, str, font, SUN.Color.COLOR('WHITE'), true, SUN.Color.PICO(5), 1, 0, 1)
+		sc.Renderer.clear(SUN.Color.PICO(0))
+		sunconsole.render(sc, delta)
+		// let rect = sc.Renderer.draw_Richtext(0, 0, [
+		// 	['1234', { font: font, split: 1, lineheight: 0, linesplit: 1, border: 0 }], [],
+		// 	[SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 1 }]
+		// ], 1, 0, 1)
+		// sc.Renderer.draw_Rect(rect, SUN.Color.RGB8(100, 0, 0, 80))
 	}
 
 	gameconsole.run()
