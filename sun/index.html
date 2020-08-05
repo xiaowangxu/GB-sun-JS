@@ -152,17 +152,35 @@
 		}
 
 		exec_Instruction(instruction) {
-			this.list.push(['>> ' + instruction, { font: font }])
+			this.list.push(['>> ' + instruction, { font: font, color: SUN.Color.RGB8(192, 192, 192) }])
 			this.list.push([])
 			this.list.push(['◻◻ ', { font: font }])
-			if (instruction === 'PICO PALETTE') {
+			instruction = instruction.toUpperCase()
+			if (instruction === 'PALETTE') {
 				this.list.push([SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 8 }])
 				this.list.push([])
 			}
-			else if (instruction === 'ABOUT') {
-				this.list.push(['GAMEBOY SUN JS', { font: font }])
+			else if (instruction === 'CHAR') {
+				this.list.push(['ABCDEFGHIJKLMNOPQRSTUVWXYZ', { font: font }])
 				this.list.push([])
-				this.list.push(['MADE BY SUN', { font: font }])
+				this.list.push(['◻◻ ', { font: font }])
+				this.list.push(['abcdefghijklmnopqrstuvwxyz', { font: font }])
+				this.list.push([])
+				this.list.push(['◻◻ ', { font: font }])
+				this.list.push(['0123456789', { font: font }])
+				this.list.push([])
+				this.list.push(['◻◻ ', { font: font }])
+				this.list.push(['+-*/<=>.,()[]{}~\'\"?:;_!@#$%^&', { font: font }])
+				this.list.push([])
+			}
+			else if (instruction === 'LIST') {
+				this.list.push(['Instruction', { font: font, color: SUN.Color.PICO(12) }])
+				this.list.push([])
+				this.list.push(['◻◻ Help', { font: font }])
+				this.list.push([])
+				this.list.push(['◻◻ Char', { font: font }])
+				this.list.push([])
+				this.list.push(['◻◻ Palette', { font: font }])
 				this.list.push([])
 			}
 			else if (instruction === 'CLS') {
@@ -175,7 +193,7 @@
 					this.list.push([])
 				}
 				catch (error) {
-					this.list.push(['UNKNOWN INSTRUCTION', { color: SUN.Color.RGB8(255, 0, 0) }])
+					this.list.push(['Unknown Instruction', { color: SUN.Color.RGB8(220, 20, 30) }])
 					this.list.push([])
 				}
 			}
@@ -188,8 +206,9 @@
 					if (sc.Keyboard.on_Continue(key)) {
 						// console.log(SUN.Fn.get_Char(key))
 						if (key === 'Enter') {
-							console.log("Instruction", this.str)
-							this.exec_Instruction(this.str)
+							// console.log("Instruction", this.str)
+							if (this.str !== '')
+								this.exec_Instruction(this.str)
 						}
 						else
 							this.str += SUN.Fn.get_Char(key)
@@ -220,8 +239,19 @@
 			// sc.Renderer.draw_Rect(size, SUN.Color.PICO(10))
 			// sc.Renderer.draw_MultiString(4, sc.Renderer.size.y - 4 - size.y - 2, '>> ' + this.str + cursor, font, SUN.Color.COLOR('WHITE'), 1, 0, 2, 1, null, SUN.Color.PICO(5))
 			let array = this.list.filter(() => { return true })
-			array.push(['>> ' + this.str + cursor, { font: font }])
-			sc.Renderer.draw_Richtext(4, 4, array, 1, 0, 3)
+			array.push(['>> ' + this.str, { font: font }])
+			array.push([cursor, { font: font, color: SUN.Color.PICO(8) }])
+
+			let rect = SUN.get_RichTextRect(array, 1, 0, 4)
+			rect.position.x = 5
+			rect.position.y = 6
+			// sc.Renderer.draw_Rect(rect, SUN.Color.PICO(15))
+			if (rect.size.y < 256 - 12) {
+				sc.Renderer.draw_Richtext(5, 6, array, 1, 0, 4)
+			}
+			else {
+				sc.Renderer.draw_Richtext(5, 256 - 6 - rect.size.y, array, 1, 0, 4)
+			}
 			this.time += delta
 		}
 	}
@@ -237,8 +267,8 @@
 	gameconsole.render = (sc, delta) => {
 		sc.Renderer.clear(SUN.Color.PICO(0))
 		sunconsole.render(sc, delta)
-		// let rect = sc.Renderer.draw_Richtext(0, 0, [
-		// 	['1234', { font: font, split: 1, lineheight: 0, linesplit: 1, border: 0 }], [],
+		// let rect = sc.Renderer.draw_Richtext(100, 100, [
+		// 	['Ha', { font: font, split: 1, lineheight: 0, linesplit: 1, border: 0 }], [],
 		// 	[SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 1 }]
 		// ], 1, 0, 1)
 		// sc.Renderer.draw_Rect(rect, SUN.Color.RGB8(100, 0, 0, 80))

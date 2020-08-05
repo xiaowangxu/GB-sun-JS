@@ -170,8 +170,8 @@ export class Sprite {
 	}
 
 
-	get_Rect() {
-		return Rect.XYWH(0, 0, this.width, this.height)
+	get_Rect(scale = 1) {
+		return Rect.XYWH(0, 0, this.width * scale, this.height * scale)
 	}
 
 	static PICO(colorarray) {
@@ -222,12 +222,13 @@ export class Char {
 			case 'a':
 				return new Char(
 					[
-						[0, 1, 1, 0],
-						[1, 0, 1, 0],
-						[1, 0, 1, 0],
-						[1, 1, 0, 1]
+						[0, 1, 1, 0, 0],
+						[1, 0, 0, 1, 0],
+						[1, 0, 0, 1, 0],
+						[1, 0, 0, 1, 0],
+						[0, 1, 1, 0, 1]
 					],
-					-3, 0
+					-2, 0
 				)
 			case 'B':
 				return new Char(
@@ -245,14 +246,15 @@ export class Char {
 			case 'b':
 				return new Char(
 					[
-						[1, 0, 0],
-						[1, 0, 0],
-						[1, 1, 0],
-						[1, 0, 1],
-						[1, 0, 1],
-						[1, 1, 0]
+						[1, 0, 0, 0],
+						[1, 0, 0, 0],
+						[1, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 1, 1, 0]
 					],
-					-1, 0
+					0, 0
 				)
 			case 'C':
 				return new Char(
@@ -270,12 +272,13 @@ export class Char {
 			case 'c':
 				return new Char(
 					[
-						[0, 1, 1],
-						[1, 0, 0],
-						[1, 0, 0],
-						[0, 1, 1]
+						[0, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 0],
+						[1, 0, 0, 0],
+						[0, 1, 1, 1]
 					],
-					-3, 0
+					-2, 0
 				)
 			case 'D':
 				return new Char(
@@ -293,14 +296,15 @@ export class Char {
 			case 'd':
 				return new Char(
 					[
-						[0, 0, 1],
-						[0, 0, 1],
-						[0, 1, 1],
-						[1, 0, 1],
-						[1, 0, 1],
-						[0, 1, 1]
+						[0, 0, 0, 1],
+						[0, 0, 0, 1],
+						[0, 1, 1, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 1]
 					],
-					-1, 0
+					0, 0
 				)
 			case 'E':
 				return new Char(
@@ -315,6 +319,17 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'e':
+				return new Char(
+					[
+						[0, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 1, 1, 1],
+						[1, 0, 0, 0],
+						[0, 1, 1, 1]
+					],
+					-2, 0
+				)
 			case 'F':
 				return new Char(
 					[
@@ -325,6 +340,19 @@ export class Char {
 						[1, 0, 0, 0],
 						[1, 0, 0, 0],
 						[1, 0, 0, 0]
+					],
+					0, 0
+				)
+			case 'f':
+				return new Char(
+					[
+						[0, 0, 1],
+						[0, 1, 0],
+						[1, 1, 1],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 1, 0]
 					],
 					0, 0
 				)
@@ -341,6 +369,19 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'g':
+				return new Char(
+					[
+						[0, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 1],
+						[0, 0, 0, 1],
+						[0, 1, 1, 0]
+					],
+					-2, 0
+				)
 			case 'H':
 				return new Char(
 					[
@@ -348,6 +389,19 @@ export class Char {
 						[1, 0, 0, 1],
 						[1, 0, 0, 1],
 						[1, 1, 1, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1]
+					],
+					0, 0
+				)
+			case 'h':
+				return new Char(
+					[
+						[1, 0, 0, 0],
+						[1, 0, 0, 0],
+						[1, 1, 1, 0],
+						[1, 0, 0, 1],
 						[1, 0, 0, 1],
 						[1, 0, 0, 1],
 						[1, 0, 0, 1]
@@ -367,6 +421,19 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'i':
+				return new Char(
+					[
+						[0, 1],
+						[0, 0],
+						[1, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1]
+					],
+					0, 0
+				)
 			case 'J':
 				return new Char(
 					[
@@ -380,6 +447,21 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'j':
+				return new Char(
+					[
+						[0, 1],
+						[0, 0],
+						[1, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[1, 0]
+					],
+					-0, 0
+				)
 			case 'K':
 				return new Char(
 					[
@@ -388,6 +470,19 @@ export class Char {
 						[1, 0, 1, 0],
 						[1, 1, 0, 0],
 						[1, 0, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1]
+					],
+					0, 0
+				)
+			case 'k':
+				return new Char(
+					[
+						[1, 0, 0, 0],
+						[1, 0, 0, 0],
+						[1, 0, 0, 1],
+						[1, 0, 1, 0],
+						[1, 1, 1, 0],
 						[1, 0, 0, 1],
 						[1, 0, 0, 1]
 					],
@@ -406,10 +501,23 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'l':
+				return new Char(
+					[
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[0, 1]
+					],
+					0, 0
+				)
 			case 'M':
 				return new Char(
 					[
-						[0, 1, 0, 1, 0],
+						[1, 1, 1, 1, 0],
 						[1, 0, 1, 0, 1],
 						[1, 0, 1, 0, 1],
 						[1, 0, 1, 0, 1],
@@ -419,10 +527,21 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'm':
+				return new Char(
+					[
+						[1, 1, 1, 1, 0],
+						[1, 0, 1, 0, 1],
+						[1, 0, 1, 0, 1],
+						[1, 0, 1, 0, 1],
+						[1, 0, 1, 0, 1]
+					],
+					-2, 0
+				)
 			case 'N':
 				return new Char(
 					[
-						[0, 1, 1, 1],
+						[1, 1, 1, 0],
 						[1, 0, 0, 1],
 						[1, 0, 0, 1],
 						[1, 0, 0, 1],
@@ -431,6 +550,17 @@ export class Char {
 						[1, 0, 0, 1]
 					],
 					0, 0
+				)
+			case 'n':
+				return new Char(
+					[
+						[1, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1]
+					],
+					-2, 0
 				)
 			case 'O':
 				return new Char(
@@ -445,6 +575,17 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'o':
+				return new Char(
+					[
+						[0, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 0]
+					],
+					-2, 0
+				)
 			case 'P':
 				return new Char(
 					[
@@ -457,6 +598,19 @@ export class Char {
 						[1, 0, 0, 0]
 					],
 					0, 0
+				)
+			case 'p':
+				return new Char(
+					[
+						[1, 1, 1, 0],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 1, 1, 0],
+						[1, 0, 0, 0],
+						[1, 0, 0, 0]
+					],
+					-2, 0
 				)
 			case 'Q':
 				return new Char(
@@ -471,6 +625,19 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'q':
+				return new Char(
+					[
+						[0, 1, 1, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 1],
+						[0, 0, 0, 1],
+						[0, 0, 0, 1]
+					],
+					-2, 0
+				)
 			case 'R':
 				return new Char(
 					[
@@ -483,6 +650,17 @@ export class Char {
 						[1, 0, 0, 1]
 					],
 					0, 0
+				)
+			case 'r':
+				return new Char(
+					[
+						[1, 0, 1],
+						[1, 1, 0],
+						[1, 0, 0],
+						[1, 0, 0],
+						[1, 0, 0]
+					],
+					-2, 0
 				)
 			case 'S':
 				return new Char(
@@ -497,6 +675,17 @@ export class Char {
 					],
 					0, 0
 				)
+			case 's':
+				return new Char(
+					[
+						[0, 1, 1, 1],
+						[1, 0, 0, 0],
+						[0, 1, 1, 0],
+						[0, 0, 0, 1],
+						[1, 1, 1, 0]
+					],
+					-2, 0
+				)
 			case 'T':
 				return new Char(
 					[
@@ -507,6 +696,19 @@ export class Char {
 						[0, 0, 1, 0, 0],
 						[0, 0, 1, 0, 0],
 						[0, 0, 1, 0, 0]
+					],
+					0, 0
+				)
+			case 't':
+				return new Char(
+					[
+						[0, 1, 0],
+						[0, 1, 0],
+						[1, 1, 1],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 0, 1]
 					],
 					0, 0
 				)
@@ -523,6 +725,17 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'u':
+				return new Char(
+					[
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 0]
+					],
+					-2, 0
+				)
 			case 'V':
 				return new Char(
 					[
@@ -535,6 +748,17 @@ export class Char {
 						[0, 0, 1, 0, 0]
 					],
 					0, 0
+				)
+			case 'v':
+				return new Char(
+					[
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 0],
+						[0, 1, 1, 0]
+					],
+					-2, 0
 				)
 			case 'W':
 				return new Char(
@@ -549,6 +773,17 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'w':
+				return new Char(
+					[
+						[1, 0, 1, 0, 1],
+						[1, 0, 1, 0, 1],
+						[1, 0, 1, 0, 1],
+						[1, 0, 1, 0, 1],
+						[0, 1, 0, 1, 0]
+					],
+					-2, 0
+				)
 			case 'X':
 				return new Char(
 					[
@@ -561,6 +796,17 @@ export class Char {
 						[1, 0, 0, 0, 1]
 					],
 					0, 0
+				)
+			case 'x':
+				return new Char(
+					[
+						[1, 0, 0, 0, 1],
+						[0, 1, 0, 1, 0],
+						[0, 0, 1, 0, 0],
+						[0, 1, 0, 1, 0],
+						[1, 0, 0, 0, 1]
+					],
+					-2, 0
 				)
 			case 'Y':
 				return new Char(
@@ -575,6 +821,19 @@ export class Char {
 					],
 					0, 0
 				)
+			case 'y':
+				return new Char(
+					[
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[1, 0, 0, 1],
+						[0, 1, 1, 1],
+						[0, 0, 0, 1],
+						[0, 1, 1, 0]
+					],
+					-2, 0
+				)
 			case 'Z':
 				return new Char(
 					[
@@ -587,6 +846,17 @@ export class Char {
 						[1, 1, 1, 1]
 					],
 					0, 0
+				)
+			case 'z':
+				return new Char(
+					[
+						[1, 1, 1, 1],
+						[0, 0, 0, 1],
+						[0, 1, 1, 0],
+						[1, 0, 0, 0],
+						[1, 1, 1, 1]
+					],
+					-2, 0
 				)
 
 			case '0':
@@ -727,7 +997,6 @@ export class Char {
 					],
 					-6, 0
 				)
-
 			case ',':
 				return new Char(
 					[
@@ -736,7 +1005,6 @@ export class Char {
 					],
 					-5, 0
 				)
-
 			case '<':
 				return new Char(
 					[
@@ -786,6 +1054,58 @@ export class Char {
 						[0, 0, 1],
 						[0, 0, 1],
 						[0, 1, 0]
+					],
+					0, 0
+				)
+			case '[':
+				return new Char(
+					[
+						[1, 1],
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[1, 0],
+						[1, 1]
+					],
+					0, 0
+				)
+			case ']':
+				return new Char(
+					[
+						[1, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[0, 1],
+						[1, 1]
+					],
+					0, 0
+				)
+			case '{':
+				return new Char(
+					[
+						[0, 0, 1],
+						[0, 1, 0],
+						[0, 1, 0],
+						[1, 0, 0],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 0, 1]
+					],
+					0, 0
+				)
+			case '}':
+				return new Char(
+					[
+						[1, 0, 0],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 0, 1],
+						[0, 1, 0],
+						[0, 1, 0],
+						[1, 0, 0]
 					],
 					0, 0
 				)
@@ -854,6 +1174,84 @@ export class Char {
 					],
 					0, 0
 				)
+			case '!':
+				return new Char(
+					[
+						[1],
+						[1],
+						[1],
+						[1],
+						[1],
+						[0],
+						[1]
+					],
+					0, 0
+				)
+			case '?':
+				return new Char(
+					[
+						[0, 1, 0],
+						[1, 0, 1],
+						[0, 0, 1],
+						[0, 1, 0],
+						[0, 1, 0],
+						[0, 0, 0],
+						[0, 1, 0]
+					],
+					0, 0
+				)
+			case '\'':
+				return new Char(
+					[
+						[1],
+						[1],
+						[0],
+						[0],
+						[0],
+						[0],
+						[0]
+					],
+					0, 0
+				)
+			case '\"':
+				return new Char(
+					[
+						[1, 0, 1],
+						[1, 0, 1],
+						[0, 0, 0],
+						[0, 0, 0],
+						[0, 0, 0],
+						[0, 0, 0],
+						[0, 0, 0]
+					],
+					0, 0
+				)
+			case ':':
+				return new Char(
+					[
+						[0],
+						[0],
+						[1],
+						[0],
+						[0],
+						[1],
+						[0]
+					],
+					0, 0
+				)
+			case ';':
+				return new Char(
+					[
+						[0, 0],
+						[0, 0],
+						[0, 1],
+						[0, 0],
+						[0, 0],
+						[0, 1],
+						[1, 0]
+					],
+					0, 0
+				)
 			case '\n':
 				return new Char(
 					[
@@ -863,6 +1261,14 @@ export class Char {
 					],
 					-4, 0
 				)
+			case '_':
+				return new Char(
+					[
+						[1, 1, 1, 1]
+					],
+					-6, 0
+				)
+
 			case '◼':
 				return new Char(
 					[
@@ -949,8 +1355,8 @@ export class Font {
 			}
 			else {
 				let char = this.get(id)
-				height = Math.max(height, char.height)
-				width += char.width
+				height = Math.max(height, char.height - char.shiftup)
+				width += char.width - char.shiftleft
 			}
 			width += split
 		})
@@ -975,12 +1381,62 @@ export class Font {
 
 	static DEFAULT() {
 		let font = new Font()
-		let str = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()_\n'
+		let str = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()\n[]{}~\'\"?:;_!@#$%^&'
 		str.split('').forEach((id) => {
 			font.add(id, Char.DEFAULT(id))
 		})
 		return font
 	}
+}
+
+export function get_RichTextRect(array, split = 1, lineheight = 0, linesplit = 1) {
+	let startx = 0
+	let starty = 0
+	let width = 0
+	let height = 0
+	array.forEach((item) => {
+		let content = item[0]
+		let style = item[1]
+		let rect = Rect.XYWH(0, 0, 0, 0)
+		if (content === undefined) {
+			startx = 0
+			starty += height + linesplit + lineheight
+			height = 0
+			return
+		}
+		if (typeof (content) === 'string') {
+			let font = DEFAULT_FONT
+			let split = 1
+			let lineheight = 0
+			let linesplit = 1
+			let border = 0
+			if (style !== undefined) {
+				if (style.font !== undefined) font = style.font
+				if (style.split !== undefined) split = style.split
+				if (style.lineheight !== undefined) lineheight = style.lineheight
+				if (style.linesplit !== undefined) linesplit = style.linesplit
+				if (style.border !== undefined) border = style.border
+			}
+			rect = font.get_MultiStringRect(content, split, lineheight, linesplit)
+			rect.size.x += border * 2
+			rect.size.y += border * 2
+		}
+		else if (content instanceof Array) {
+			// console.log(content)
+			rect = get_RichTextRect(content)
+		}
+		else if (content instanceof Sprite) {
+			let scale = 1
+			if (style !== undefined) {
+				if (style.scale !== undefined) scale = style.scale
+			}
+			rect = content.get_Rect(scale)
+		}
+		startx += rect.size.x + split
+		width = Math.max(startx - split, width)
+		height = Math.max(rect.size.y, height)
+	})
+	return Rect.XYWH(0, 0, width, starty + height + lineheight)
 }
 
 //************************************
@@ -1058,7 +1514,7 @@ class Renderer {
 				return
 			}
 			let char = font.get(id)
-			this.draw_Char(x + border + lastx, y + border - font.maxheight + rect.size.y, font.get(id), color)
+			this.draw_Char(x + border + lastx, y + border, font.get(id), color)
 			lastx += char.width + split
 		})
 		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
@@ -1069,7 +1525,7 @@ class Renderer {
 		let starty = 0
 		let rect = font.get_MultiStringRect(string, split, lineheight, linesplit)
 		if (backgroundcolor !== null) {
-			this.draw_Rect(Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + lineheight + border * 2), Color.PICO(10))
+			this.draw_Rect(Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + lineheight + border * 2), backgroundcolor)
 		}
 		lines.forEach((line) => {
 			if (line === '') {
@@ -1101,11 +1557,27 @@ class Renderer {
 			if (typeof (content) === 'string') {
 				let font = DEFAULT_FONT
 				let color = Color.COLOR('white')
+				let split = 1
+				let lineheight = 0
+				let linesplit = 1
+				let border = 0
+				let backgroundcolor = null
+				let linebackgroundcolor = null
 				if (style !== undefined) {
 					if (style.font !== undefined) font = style.font
 					if (style.color !== undefined) color = style.color
+					if (style.split !== undefined) split = style.split
+					if (style.lineheight !== undefined) lineheight = style.lineheight
+					if (style.linesplit !== undefined) linesplit = style.linesplit
+					if (style.border !== undefined) border = style.border
+					if (style.backgroundcolor !== undefined) backgroundcolor = style.backgroundcolor
+					if (style.linebackgroundcolor !== undefined) linebackgroundcolor = style.linebackgroundcolor
 				}
-				rect = this.draw_MultiString(x + startx, y + starty, content, font, color)
+				rect = this.draw_MultiString(x + startx, y + starty, content, font, color, split, lineheight, linesplit, border, backgroundcolor, linebackgroundcolor)
+			}
+			else if (content instanceof Array) {
+				// console.log(content)
+				rect = this.draw_Richtext(x + startx, y + starty, content)
 			}
 			else if (content instanceof Sprite) {
 				rect = this.draw_Sprite(x + startx, y + starty, content, style.scale)
@@ -1182,7 +1654,7 @@ class MouseInput {
 	}
 }
 
-const ASCII_CHAR = (' AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()_').split('')
+const ASCII_CHAR = (' AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()[]{}~\'\"?:;_!@#$%^&').split('')
 
 class KeyboardInput {
 	constructor() {
