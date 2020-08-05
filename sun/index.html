@@ -23,6 +23,7 @@
 		width: 100%;
 		height: 100%;
 		/* padding: auto; */
+		background-color: rgb(13, 13, 48);
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -30,8 +31,9 @@
 	}
 
 	#container>canvas {
-		width: 500px;
-		height: 500px;
+		/* width: 500px; */
+		height: 100%;
+		/* height: 500px; */
 	}
 </style>
 
@@ -151,51 +153,106 @@
 			this.time = 0
 		}
 
-		exec_Instruction(instruction) {
+		exec_Instruction(instruction, sc, delta) {
 			this.list.push(['>> ' + instruction, { font: font, color: SUN.Color.RGB8(192, 192, 192) }])
 			this.list.push([])
 			this.list.push(['◻◻ ', { font: font }])
-			instruction = instruction.toUpperCase()
-			if (instruction === 'PALETTE') {
+			let array = instruction.split(' ')
+			let ins = array[0]
+			ins = ins.toUpperCase()
+			let arg = array.splice(1, array.length - 1)
+			if (ins === 'PALETTE') {
 				this.list.push([SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 8 }])
 				this.list.push([])
 			}
-			else if (instruction === 'CHAR') {
-				this.list.push(['ABCDEFGHIJKLMNOPQRSTUVWXYZ', { font: font }])
-				this.list.push([])
-				this.list.push(['◻◻ ', { font: font }])
-				this.list.push(['abcdefghijklmnopqrstuvwxyz', { font: font }])
-				this.list.push([])
-				this.list.push(['◻◻ ', { font: font }])
-				this.list.push(['0123456789', { font: font }])
-				this.list.push([])
-				this.list.push(['◻◻ ', { font: font }])
-				this.list.push(['+-*/<=>.,()[]{}~\'\"?:;_!@#$%^&', { font: font }])
-				this.list.push([])
+			else if (ins === 'COLOR') {
+				if (arg.length === 1) {
+					let color = parseInt(arg[0])
+					if (color >= 0 && color <= 15) {
+						this.list.push([new SUN.Sprite([[SUN.Color.PICO(color)]]), { scale: 8 }])
+						this.list.push([])
+					}
+					else {
+						this.list.push(['Argument(s) error', { color: SUN.Color.RGB8(220, 20, 30) }])
+						this.list.push([])
+						this.list.push(['◻◻ Instruction ', {}])
+						this.list.push(['Color int(0-15)', { color: SUN.Color.PICO(12) }])
+						this.list.push([])
+					}
+				}
+				else if (arg.length === 3) {
+					let r = parseInt(arg[0])
+					let g = parseInt(arg[1])
+					let b = parseInt(arg[2])
+					this.list.push([new SUN.Sprite([[SUN.Color.RGB8(r, g, b)]]), { scale: 8 }])
+					this.list.push([])
+				}
+				else {
+					this.list.push(['Argument(s) error', { color: SUN.Color.RGB8(220, 20, 30) }])
+					this.list.push([])
+					this.list.push(['◻◻ Instruction ', {}])
+					this.list.push(['Color int, int int int', { color: SUN.Color.PICO(12) }])
+					this.list.push([])
+				}
 			}
-			else if (instruction === 'LIST') {
+
+			else if (ins === 'CHAR') {
+				if (arg.length === 0) {
+					this.list.push(['ABCDEFGHIJKLMNOPQRSTUVWXYZ', { font: font }])
+					this.list.push([])
+					this.list.push(['◻◻ ', { font: font }])
+					this.list.push(['abcdefghijklmnopqrstuvwxyz', { font: font }])
+					this.list.push([])
+					this.list.push(['◻◻ ', { font: font }])
+					this.list.push(['0123456789', { font: font }])
+					this.list.push([])
+					this.list.push(['◻◻ ', { font: font }])
+					this.list.push(['+-*/<=>.,()[]{}~\'\"?:;_!@#$%^&', { font: font }])
+					this.list.push([])
+				}
+				else if (arg.length === 1) {
+					this.list.push([arg[0], { font: font }])
+					this.list.push([])
+				}
+			}
+			else if (ins === 'LIST') {
 				this.list.push(['Instruction', { font: font, color: SUN.Color.PICO(12) }])
 				this.list.push([])
-				this.list.push(['◻◻ Help', { font: font }])
+				this.list.push(['◻◻ Cls', { font: font }])
 				this.list.push([])
 				this.list.push(['◻◻ Char', { font: font }])
 				this.list.push([])
 				this.list.push(['◻◻ Palette', { font: font }])
 				this.list.push([])
+				this.list.push(['◻◻ Color', { font: font }])
+				this.list.push([])
+				this.list.push(['◻◻ Rainbow', { font: font }])
+				this.list.push([])
 			}
-			else if (instruction === 'CLS') {
+			else if (ins === 'RAINBOW') {
+				let array = 'Rainbow !!!2123rainbow12uiwedyuiqwhuidw'.split('').map((char, index) => {
+					return [char, { font: font, color: SUN.Color.PICO(13) }, (time) => {
+						return {
+							// color: SUN.Color.RGB(Math.sin(time * 0.01), Math.sin(time * 0.01 + 1), Math.sin(time * 0.01 + 2)),
+							// linesplit: 3,
+							// offest: new SUN.Vector2(0, Math.sin(time * 0.01) * 3),
+							lineheight: Math.round(Math.cos(time * 0.005 + index) * 2 + 2)
+						}
+					}]
+				})
+				this.list.push([array])
+				this.list.push([])
+			}
+			else if (ins === 'CLS') {
 				this.list = []
 			}
+			else if (ins === 'FPS') {
+				this.list.push([String(Math.round(1000 / delta))])
+				this.list.push([])
+			}
 			else {
-				try {
-					let ans = eval(instruction)
-					this.list.push([JSON.stringify(ans).toUpperCase()])
-					this.list.push([])
-				}
-				catch (error) {
-					this.list.push(['Unknown Instruction', { color: SUN.Color.RGB8(220, 20, 30) }])
-					this.list.push([])
-				}
+				this.list.push(['Unknown Instruction', { color: SUN.Color.RGB8(220, 20, 30) }])
+				this.list.push([])
 			}
 			this.str = ''
 		}
@@ -208,7 +265,7 @@
 						if (key === 'Enter') {
 							// console.log("Instruction", this.str)
 							if (this.str !== '')
-								this.exec_Instruction(this.str)
+								this.exec_Instruction(this.str, sc, delta)
 						}
 						else
 							this.str += SUN.Fn.get_Char(key)
@@ -250,7 +307,7 @@
 				sc.Renderer.draw_Richtext(5, 6, array, 1, 0, 4)
 			}
 			else {
-				sc.Renderer.draw_Richtext(5, 256 - 6 - rect.size.y, array, 1, 0, 4)
+				sc.Renderer.draw_Richtext(5, sc.Renderer.size.y - 6 - rect.size.y, array, 1, 0, 4)
 			}
 			this.time += delta
 		}
@@ -272,6 +329,7 @@
 		// 	[SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 1 }]
 		// ], 1, 0, 1)
 		// sc.Renderer.draw_Rect(rect, SUN.Color.RGB8(100, 0, 0, 80))
+		// sc.Renderer.draw_MultiString(100, 100, '123\nwshqk', font, SUN.Color.COLOR('white'), 1, 1, 0, 0, SUN.Color.RGB8(100, 0, 0),)
 	}
 
 	gameconsole.run()

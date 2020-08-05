@@ -1003,7 +1003,7 @@ export class Char {
 						[0, 0, 1, 0],
 						[0, 1, 0, 0]
 					],
-					-5, 0
+					-6, 0
 				)
 			case '<':
 				return new Char(
@@ -1451,6 +1451,7 @@ class Renderer {
 		this.canvas.height = height
 		this.canvas_context = this.canvas.getContext("2d")
 		this.size = new Vector2(width, height)
+		this.time = 0
 	}
 
 	get_Canvas() {
@@ -1485,11 +1486,8 @@ class Renderer {
 		return Rect.XYWH(x, y, sprite.width * scale, sprite.height * scale)
 	}
 
-	draw_Char(x, y, char, color, background = false, backgroundcolor) {
+	draw_Char(x, y, char, color) {
 		// console.log(char)
-		if (background) {
-			this.draw_Rect(Rect.XYWH(x, y, char.width, char.height), backgroundcolor)
-		}
 		for (let i = 0; i < char.pointarray.length; i++) {
 			let row = char.pointarray[i]
 			for (let j = 0; j < row.length; j++) {
@@ -1514,7 +1512,7 @@ class Renderer {
 				return
 			}
 			let char = font.get(id)
-			this.draw_Char(x + border + lastx, y + border, font.get(id), color)
+			this.draw_Char(x + border + lastx, y + lineheight + border, font.get(id), color)
 			lastx += char.width + split
 		})
 		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
@@ -1536,7 +1534,7 @@ class Renderer {
 			this.draw_String(x, y + starty, line, font, color, split, lineheight, border, linebackgroundcolor)
 			starty += height + lineheight + linesplit
 		})
-		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
+		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2 + lineheight)
 	}
 
 	draw_Richtext(x, y, array, split = 1, lineheight = 0, linesplit = 1) {
@@ -1548,6 +1546,9 @@ class Renderer {
 			let content = item[0]
 			let style = item[1]
 			let rect = Rect.XYWH(0, 0, 0, 0)
+			if (item[2] !== undefined) {
+				style = Object.assign(style, (item[2])(this.time))
+			}
 			if (content === undefined) {
 				startx = 0
 				starty += height + linesplit + lineheight
@@ -1563,6 +1564,7 @@ class Renderer {
 				let border = 0
 				let backgroundcolor = null
 				let linebackgroundcolor = null
+				let offest = new Vector2(0, 0)
 				if (style !== undefined) {
 					if (style.font !== undefined) font = style.font
 					if (style.color !== undefined) color = style.color
@@ -1572,12 +1574,15 @@ class Renderer {
 					if (style.border !== undefined) border = style.border
 					if (style.backgroundcolor !== undefined) backgroundcolor = style.backgroundcolor
 					if (style.linebackgroundcolor !== undefined) linebackgroundcolor = style.linebackgroundcolor
+					if (style.offest !== undefined) offest = style.offest
 				}
-				rect = this.draw_MultiString(x + startx, y + starty, content, font, color, split, lineheight, linesplit, border, backgroundcolor, linebackgroundcolor)
+				rect = this.draw_MultiString(x + startx + offest.x, y + starty + offest.y, content, font, color, split, lineheight, linesplit, border, backgroundcolor, linebackgroundcolor)
+				// this.draw_Rect(rect, Color.RGB8(255, 0, 0, 80))
 			}
 			else if (content instanceof Array) {
 				// console.log(content)
 				rect = this.draw_Richtext(x + startx, y + starty, content)
+				// this.draw_Rect(rect, Color.RGB8(255, 0, 0, 80))
 			}
 			else if (content instanceof Sprite) {
 				rect = this.draw_Sprite(x + startx, y + starty, content, style.scale)
@@ -1715,7 +1720,7 @@ const MOUSE_CURSOR = new Sprite([
 	[Color.COLOR('     '), Color.COLOR('     '), Color.COLOR('     '), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black')],])
 
 export class sunConsole {
-	constructor(width, height, clear = true, mouse = false) {
+	constructor(width, height, clear = true, mouse = true) {
 		this.cursor = mouse
 		this.clear = clear
 		this.Renderer = new Renderer(width, height)
@@ -1760,6 +1765,7 @@ export class sunConsole {
 		if (typeof (timestep) === 'number') {
 			delta = timestep - sunconsole.lasttimestep
 			sunconsole.lasttimestep = timestep
+			sunconsole.Renderer.time = timestep
 
 			sunconsole.event()
 			sunconsole.action(sunconsole, delta)
