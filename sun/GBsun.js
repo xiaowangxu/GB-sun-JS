@@ -5,7 +5,7 @@ export const Fn = {
 
 	is_ASCII(id) {
 		// console.log(id)
-		if (id === 'Enter')
+		if (id === 'Enter' || id === 'Tab')
 			return true
 		else
 			return ASCII_CHAR.includes(id)
@@ -15,6 +15,8 @@ export const Fn = {
 		switch (id) {
 			case 'Enter':
 				return '\n'
+			case 'Tab':
+				return '\t'
 			default:
 				if (this.is_ASCII(id)) {
 					return id
@@ -26,9 +28,92 @@ export const Fn = {
 
 // util Class
 export class Vector2 {
-	constructor(x, y) {
+	constructor(x = 0, y = 0) {
 		this.x = x
 		this.y = y
+	}
+}
+
+export class Vector3 {
+	constructor(x = 0, y = 0, z = 0) {
+		this.x = x
+		this.y = y
+		this.z = z
+	}
+
+	x_mat4(mat) {
+		let i = this
+		let m = mat.mat
+		let x = i.x * m[0][0] + i.y * m[1][0] + i.z * m[2][0] + m[3][0]
+		let y = i.x * m[0][1] + i.y * m[1][1] + i.z * m[2][1] + m[3][1]
+		let z = i.x * m[0][2] + i.y * m[1][2] + i.z * m[2][2] + m[3][2]
+		let w = i.x * m[0][3] + i.y * m[1][3] + i.z * m[2][3] + m[3][3]
+
+		if (w !== 0) {
+			return new Vector3(x / w, y / w, z / w)
+		}
+		return new Vector3(x, y, z)
+	}
+
+	dot(vec) {
+		return this.x * vec.x + this.y * vec.y + this.z * vec.z
+	}
+
+	minus(vec) {
+		return new Vector3(this.x - vec.x, this.y - vec.y, this.z - vec.z)
+	}
+
+	cross(vec) {
+		return new Vector3(this.y * vec.z - this.z * vec.y,
+			this.z * vec.x - this.x * vec.z, this.x * vec.y - this.y * vec.x)
+	}
+
+	length() {
+		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z)
+	}
+
+	normalize() {
+		let length = this.length()
+		return new Vector3(this.x / length, this.y / length, this.z / length)
+	}
+}
+
+export class Matrix4 {
+	constructor(elem) {
+		this.mat = elem
+	}
+}
+
+export class TriFace {
+	constructor(p1, p2, p3) {
+		this.p1 = p1
+		this.p2 = p2
+		this.p3 = p3
+		let line1 = this.p2.minus(this.p1)
+		let line2 = this.p3.minus(this.p1)
+		// console.log(line1, line2)
+		this.normal = line1.cross(line2).normalize()
+	}
+}
+
+export class Mesh {
+	constructor(faces) {
+		this.faces = faces
+	}
+
+	static CUBE(size = 1) {
+		return new Mesh([new TriFace(new Vector3(0, 0, 0), new Vector3(0, size, 0), new Vector3(size, size, 0)),
+		new TriFace(new Vector3(0, 0, 0), new Vector3(size, size, 0), new Vector3(size, 0, 0)),
+		new TriFace(new Vector3(size, 0, 0), new Vector3(size, size, 0), new Vector3(size, size, size)),
+		new TriFace(new Vector3(size, 0, 0), new Vector3(size, size, size), new Vector3(size, 0, size)),
+		new TriFace(new Vector3(size, 0, size), new Vector3(size, size, size), new Vector3(0, size, size)),
+		new TriFace(new Vector3(size, 0, size), new Vector3(0, size, size), new Vector3(0, 0, size)),
+		new TriFace(new Vector3(0, 0, size), new Vector3(0, size, size), new Vector3(0, size, 0)),
+		new TriFace(new Vector3(0, 0, size), new Vector3(0, size, 0), new Vector3(0, 0, 0)),
+		new TriFace(new Vector3(0, size, 0), new Vector3(0, size, size), new Vector3(size, size, size)),
+		new TriFace(new Vector3(0, size, 0), new Vector3(size, size, size), new Vector3(size, size, 0)),
+		new TriFace(new Vector3(size, 0, size), new Vector3(0, 0, size), new Vector3(0, 0, 0)),
+		new TriFace(new Vector3(size, 0, size), new Vector3(0, 0, 0), new Vector3(size, 0, 0))])
 	}
 }
 
@@ -75,6 +160,10 @@ export class Color {
 
 	get_A() {
 		return this.a * 100
+	}
+
+	get_Invert() {
+		return Color.RGB8(255 - this.r, 255 - this.g, 255 - this.b, this.a * 100)
 	}
 
 	static RGB8(r, g, b, a = 100) {
@@ -1250,7 +1339,7 @@ export class Char {
 						[0, 1],
 						[1, 0]
 					],
-					0, 0
+					-1, 0
 				)
 			case '\n':
 				return new Char(
@@ -1268,6 +1357,22 @@ export class Char {
 					],
 					-6, 0
 				)
+
+
+			case '→':
+				return new Char(
+					[
+						[0, 0, 0, 0, 0, 0],
+						[0, 0, 0, 1, 0, 0],
+						[0, 0, 0, 0, 1, 0],
+						[1, 1, 1, 1, 1, 1],
+						[0, 0, 0, 0, 1, 0],
+						[0, 0, 0, 1, 0, 0],
+						[0, 0, 0, 0, 0, 0]
+					],
+					0, 0
+				)
+
 
 			case '◼':
 				return new Char(
@@ -1310,12 +1415,47 @@ export class Char {
 				)
 		}
 	}
+
+	static CODE(id) {
+		switch (id) {
+			case 'func':
+				return new Char(
+					[
+						[0, 0, 1, 1],
+						[0, 1, 1, 0],
+						[0, 1, 1, 0],
+						[0, 1, 1, 1],
+						[1, 1, 1, 0],
+						[0, 1, 1, 0],
+						[0, 1, 1, 0],
+						[0, 1, 1, 0],
+						[0, 1, 0, 0],
+						[1, 0, 0, 0]
+					],
+					1, 0
+				)
+			default:
+				return new Char(
+					[
+						[1, 0, 1, 0, 1],
+						[0, 1, 0, 1, 0],
+						[1, 0, 1, 0, 1],
+						[0, 1, 0, 1, 0],
+						[1, 0, 1, 0, 1],
+						[0, 1, 0, 1, 0],
+						[1, 0, 1, 0, 1]
+					],
+					0, 0
+				)
+		}
+	}
 }
 
 export class Font {
-	constructor(space = 2, returnheight = 8) {
+	constructor(space = 2, returnheight = 7, tab = 4) {
 		this.charmap = {}
 		this.space = space
+		this.tab = tab
 		this.returnheight = returnheight
 		this.maxheight = 0
 	}
@@ -1347,11 +1487,18 @@ export class Font {
 		string.split('').forEach((id, idx, arr) => {
 			if (id === ' ') {
 				width += this.space
-
-			}
-			else if (id === '\n') {
 				height = Math.max(height, this.returnheight)
-
+			}
+			else if (id === '\t') {
+				let nearx = 0
+				if (width % (this.space * this.tab) === 0) {
+					nearx = (Math.ceil(width / this.space / this.tab) + 1) * this.space * this.tab
+				}
+				else {
+					nearx = Math.ceil(width / this.space / this.tab) * this.space * this.tab
+				}
+				width = nearx
+				height = Math.max(height, this.returnheight)
 			}
 			else {
 				let char = this.get(id)
@@ -1381,7 +1528,7 @@ export class Font {
 
 	static DEFAULT() {
 		let font = new Font()
-		let str = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()\n[]{}~\'\"?:;_!@#$%^&'
+		let str = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.,<=>◼◻+-*/()\n[]{}~\'\"?:;_!@#$%^&→'
 		str.split('').forEach((id) => {
 			font.add(id, Char.DEFAULT(id))
 		})
@@ -1432,13 +1579,75 @@ export function get_RichTextRect(array, split = 1, lineheight = 0, linesplit = 1
 			}
 			rect = content.get_Rect(scale)
 		}
-		startx += rect.size.x + split
+		if (item[3] !== undefined && item[3] !== null) {
+			startx += item[3] + split
+		}
+		else {
+			startx += rect.size.x + split
+		}
+		if (item[4] !== undefined && item[4] !== null) {
+			height = Math.max(item[4], height)
+		}
+		else {
+			height = Math.max(rect.size.y, height)
+		}
 		width = Math.max(startx - split, width)
-		height = Math.max(rect.size.y, height)
 	})
 	return Rect.XYWH(0, 0, width, starty + height + lineheight)
 }
 
+export class Buffer {
+	constructor(width, height) {
+		this.width = width
+		this.height = height
+		this.buffer = new ImageData(this.width, this.height)
+		this.blendstyle = 0
+		for (let i = 0; i < width; i++) {
+			for (let j = 0; j < height; j++) {
+				let id = (j * width + i) * 4
+				this.buffer.data[id + 3] = 255
+			}
+		}
+	}
+
+	fill_Rect(x, y, width, height, color) {
+		for (let i = x; i < x + width; i++) {
+			for (let j = y; j < y + height; j++) {
+				this.set_Pixel(i, j, color)
+			}
+		}
+	}
+
+	set_Pixel(x, y, color) {
+		if (x < 0 || x >= this.width || y < 0 || y >= this.height) return
+		let r = 0
+		let g = 0
+		let b = 0
+		let id = (y * this.width + x) * 4
+		switch (this.blendstyle) {
+			case 1:
+				break
+			default:
+				let one_a = 1 - color.a
+				r = this.buffer.data[id + 0] * one_a + color.r * color.a
+				g = this.buffer.data[id + 1] * one_a + color.g * color.a
+				b = this.buffer.data[id + 2] * one_a + color.b * color.a
+				break
+		}
+
+		this.buffer.data[id + 0] = r
+		this.buffer.data[id + 1] = g
+		this.buffer.data[id + 2] = b
+		// console.log(">>")
+	}
+}
+
+// 3d
+export class Camera {
+	constructor(position = new Vector3()) {
+		this.position = position
+	}
+}
 //************************************
 //           Engine Obj
 //************************************
@@ -1451,7 +1660,24 @@ class Renderer {
 		this.canvas.height = height
 		this.canvas_context = this.canvas.getContext("2d")
 		this.size = new Vector2(width, height)
+		this.buffer = new Buffer(this.size.x, this.size.y)
 		this.time = 0
+
+		// 3d
+		this.near = 0.1
+		this.far = 10000
+		this.fov = 90
+		this.aspect_ratio = height / width
+		this.fov_rad = 1 / Math.tan(this.fov / 2 / 180 * Math.PI)
+		this.projection_matrix = new Matrix4([
+			[this.aspect_ratio * this.fov_rad, 0, 0, 0],
+			[0, this.fov_rad, 0, 0],
+			[0, 0, this.far / (this.far - this.near), 1],
+			[0, 0, (-this.far * this.near) / (this.far - this.near), 0]])
+	}
+
+	put_Buffer() {
+		this.canvas_context.putImageData(this.buffer.buffer, 0, 0)
 	}
 
 	get_Canvas() {
@@ -1459,20 +1685,152 @@ class Renderer {
 	}
 
 	clear(color = Color.COLOR('BLACK')) {
-		this.canvas_context.fillStyle = color.get_Color()
-		this.canvas_context.fillRect(0, 0, this.size.x, this.size.y)
+		this.buffer.fill_Rect(0, 0, this.size.x, this.size.y, color)
+		// this.canvas_context.fillStyle = color.get_Color()
+		// this.canvas_context.fillRect(0, 0, this.size.x, this.size.y)
 	}
 
 	draw_Pixel(x, y, color) {
-		if (x < 0 || x >= this.size.x || y < 0 || y >= this.size.y) return
-		this.canvas_context.fillStyle = color.get_Color()
-		this.canvas_context.fillRect(x, y, 1, 1)
+		// this.canvas_context.fillStyle = color.get_Color()
+		// this.canvas_context.fillRect(x, y, 1, 1)
+		x = Math.round(x)
+		y = Math.round(y)
+		this.buffer.set_Pixel(x, y, color)
 		return Rect.XYWH(x, y, 1, 1)
 	}
 
+	draw_Line(start, end, color) {
+		// this.canvas_context.beginPath()
+		// this.canvas_context.moveTo(start.x, start.y)
+		// this.canvas_context.lineTo(end.x, end.y)
+		// this.canvas_context.lineWidth = width
+		// this.canvas_context.strokeStyle = color.get_Color()
+		// this.canvas_context.stroke()
+		start = new Vector2(Math.round(start.x), Math.round(start.y))
+		end = new Vector2(Math.round(end.x), Math.round(end.y))
+
+		let x, y, dx, dy, dx1, dy1, px, py, xe, ye
+		dx = end.x - start.x
+		dy = end.y - start.y
+		dx1 = Math.abs(dx)
+		dy1 = Math.abs(dy)
+		px = 2 * dy1 - dx1
+		py = 2 * dx1 - dy1
+		if (dy1 <= dx1) {
+			if (dx >= 0) {
+				x = start.x
+				y = start.y
+				xe = end.x
+			}
+			else {
+				x = end.x
+				y = end.y
+				xe = start.x
+			}
+
+			this.draw_Pixel(x, y, color);
+
+			for (let i = 0; x < xe; i++) {
+				x = x + 1;
+				if (px < 0)
+					px = px + 2 * dy1;
+				else {
+					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) y = y + 1; else y = y - 1;
+					px = px + 2 * (dy1 - dx1);
+				}
+				this.draw_Pixel(x, y, color);
+			}
+		}
+		else {
+			if (dy >= 0) {
+				x = start.x
+				y = start.y
+				ye = end.y
+			}
+			else {
+				x = end.x
+				y = end.y
+				ye = start.y
+			}
+
+			this.draw_Pixel(x, y, color);
+
+			for (let i = 0; y < ye; i++) {
+				y = y + 1;
+				if (py <= 0)
+					py = py + 2 * dx1;
+				else {
+					if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0)) x = x + 1; else x = x - 1;
+					py = py + 2 * (dx1 - dy1);
+				}
+				this.draw_Pixel(x, y, color);
+			}
+		}
+	}
+
+	draw_TriFace(face, color = Color.COLOR('WHITE')) {
+		this.draw_Line(face.p1, face.p2, color)
+		this.draw_Line(face.p2, face.p3, color)
+		this.draw_Line(face.p1, face.p3, color)
+	}
+
+	draw_Mesh(mesh, camera) {
+		let angle = this.time * 0.001
+		let rx = new Matrix4([
+			[1, 0, 0, 0],
+			[0, Math.cos(angle), -Math.sin(angle), 0],
+			[0, Math.sin(angle), Math.cos(angle), 0],
+			[0, 0, 0, 0]])
+		let rz = new Matrix4([
+			[Math.cos(angle), -Math.sin(angle), 0, 0],
+			[Math.sin(angle), Math.cos(angle), 0, 0],
+			[0, 0, 1, 0],
+			[0, 0, 0, 0]])
+		mesh.faces.forEach((face) => {
+			// console.log(face.normal)
+			// if (face.normal.z <= 0) return
+			let rf1 = face.p1.x_mat4(rz).x_mat4(rx)
+			let rf2 = face.p2.x_mat4(rz).x_mat4(rx)
+			let rf3 = face.p3.x_mat4(rz).x_mat4(rx)
+
+			let f1 = new Vector3(rf1.x, rf1.y, rf1.z + 3)
+			let f2 = new Vector3(rf2.x, rf2.y, rf2.z + 3)
+			let f3 = new Vector3(rf3.x, rf3.y, rf3.z + 3)
+
+
+			let newface = new TriFace(f1, f2, f3)
+
+			// console.log(camera)
+
+			if (newface.normal.dot(newface.p1.minus(camera.position)) >= 0) return
+
+			let pf1 = newface.p1.x_mat4(this.projection_matrix)
+			let pf2 = newface.p2.x_mat4(this.projection_matrix)
+			let pf3 = newface.p3.x_mat4(this.projection_matrix)
+
+			pf1.x += 1
+			pf1.y += 1
+			pf2.x += 1
+			pf2.y += 1
+			pf3.x += 1
+			pf3.y += 1
+			pf1.x *= this.size.x / 2
+			pf1.y *= this.size.y / 2
+			pf2.x *= this.size.x / 2
+			pf2.y *= this.size.y / 2
+			pf3.x *= this.size.x / 2
+			pf3.y *= this.size.y / 2
+
+			let projectface = new TriFace(pf1, pf2, pf3)
+
+
+
+			this.draw_TriFace(projectface)
+		})
+	}
+
 	draw_Rect(rect, color) {
-		this.canvas_context.fillStyle = color.get_Color()
-		this.canvas_context.fillRect(rect.position.x, rect.position.y, rect.size.x, rect.size.y)
+		this.buffer.fill_Rect(rect.position.x, rect.position.y, rect.size.x, rect.size.y, color)
 		return rect
 	}
 
@@ -1511,8 +1869,19 @@ class Renderer {
 				lastx += font.space + split
 				return
 			}
+			if (id === '\t') {
+				let nearx = 0
+				if (lastx % (font.space * font.tab) === 0) {
+					nearx = (Math.ceil(lastx / font.space / font.tab) + 1) * font.space * font.tab
+				}
+				else {
+					nearx = Math.ceil(lastx / font.space / font.tab) * font.space * font.tab
+				}
+				lastx = nearx + split
+				return
+			}
 			let char = font.get(id)
-			this.draw_Char(x + border + lastx, y + lineheight + border, font.get(id), color)
+			this.draw_Char(x + border + lastx, y + lineheight + border, char, color)
 			lastx += char.width + split
 		})
 		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
@@ -1522,8 +1891,10 @@ class Renderer {
 		let lines = string.split('\n')
 		let starty = 0
 		let rect = font.get_MultiStringRect(string, split, lineheight, linesplit)
+		// if (string === ' ') console.log(rect)
 		if (backgroundcolor !== null) {
 			this.draw_Rect(Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + lineheight + border * 2), backgroundcolor)
+			// console.log(">>>>", string, rect)
 		}
 		lines.forEach((line) => {
 			if (line === '') {
@@ -1580,16 +1951,33 @@ class Renderer {
 				// this.draw_Rect(rect, Color.RGB8(255, 0, 0, 80))
 			}
 			else if (content instanceof Array) {
-				// console.log(content)
-				rect = this.draw_Richtext(x + startx, y + starty, content)
+				let split = 1
+				let lineheight = 0
+				let linesplit = 1
+				if (style !== undefined) {
+					if (style.split !== undefined) split = style.split
+					if (style.lineheight !== undefined) lineheight = style.lineheight
+					if (style.linesplit !== undefined) linesplit = style.linesplit
+				}
+				rect = this.draw_Richtext(x + startx, y + starty, content, split, lineheight, linesplit)
 				// this.draw_Rect(rect, Color.RGB8(255, 0, 0, 80))
 			}
 			else if (content instanceof Sprite) {
 				rect = this.draw_Sprite(x + startx, y + starty, content, style.scale)
 			}
-			startx += rect.size.x + split
+			if (item[3] !== undefined && item[3] !== null) {
+				startx += item[3] + split
+			}
+			else {
+				startx += rect.size.x + split
+			}
+			if (item[4] !== undefined && item[4] !== null) {
+				height = Math.max(item[4], height)
+			}
+			else {
+				height = Math.max(rect.size.y, height)
+			}
 			width = Math.max(startx - split, width)
-			height = Math.max(rect.size.y, height)
 		})
 		return Rect.XYWH(x, y, width, starty + height + lineheight)
 	}
@@ -1676,6 +2064,10 @@ class KeyboardInput {
 	}
 
 	keydown(event) {
+		if (event.key === 'Tab') {
+			event.preventDefault()
+			event.returnValue = false
+		}
 		if (this.keymap[event.key] === undefined) {
 			this.keymap[event.key] = {
 				once: true,
@@ -1720,7 +2112,7 @@ const MOUSE_CURSOR = new Sprite([
 	[Color.COLOR('     '), Color.COLOR('     '), Color.COLOR('     '), Color.COLOR('black'), Color.COLOR('black'), Color.COLOR('black')],])
 
 export class sunConsole {
-	constructor(width, height, clear = true, mouse = true) {
+	constructor(width, height, clear = false, mouse = true) {
 		this.cursor = mouse
 		this.clear = clear
 		this.Renderer = new Renderer(width, height)
@@ -1748,14 +2140,6 @@ export class sunConsole {
 		this.Renderer.clear("#ff0000")
 	}
 
-	sys(sunconsole, delta) {
-		// console.log((1000 / delta))
-		// this.Renderer.draw_String(0, 0, "FPS " + Math.round(1000 / delta), DEFAULT_FONT, Color.COLOR('WHITE'), true, Color.PICO(5), 1, 0, 1)
-		if (this.cursor) this.Renderer.draw_Sprite(this.Mouse.position.x - 1, this.Mouse.position.y - 1, MOUSE_CURSOR)
-		this.Keyboard.loopend()
-		this.Mouse.loopend()
-	}
-
 	get_ConsoleDOM() {
 		return this.Renderer.get_Canvas();
 	}
@@ -1773,7 +2157,10 @@ export class sunConsole {
 				sunconsole.Renderer.clear()
 			}
 			sunconsole.render(sunconsole, delta)
-			sunconsole.sys(sunconsole, delta)
+			if (sunconsole.cursor) sunconsole.Renderer.draw_Sprite(sunconsole.Mouse.position.x - 1, sunconsole.Mouse.position.y - 1, MOUSE_CURSOR)
+			sunconsole.Keyboard.loopend()
+			sunconsole.Mouse.loopend()
+			sunconsole.Renderer.put_Buffer()
 		}
 		requestAnimationFrame(sunconsole.call_GameLoop)
 	}
