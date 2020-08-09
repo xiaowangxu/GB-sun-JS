@@ -48,6 +48,7 @@
 	let font = SUN.Font.DEFAULT()
 
 	gameconsole.init = (sc) => {
+
 		// for (let i = 0; i < 4; i++) {
 		// 	for (let j = 0; j < 4; j++) {
 		// 		let id = i * 4 + j
@@ -155,7 +156,7 @@
 			this.time = 0
 			this.ins = []
 			this.idx = 0
-			this.backgroundcolor = SUN.Color.PICO(0)
+			this.backgroundcolor = SUN.Color.RGB8(20, 20, 20)
 		}
 
 		exec_Instruction(instruction, sc, delta) {
@@ -358,6 +359,8 @@
 
 		render(sc, delta) {
 			sc.Renderer.clear(this.backgroundcolor)
+			sc.Renderer.draw_Mesh(monkey, camera)
+
 			let cursor
 			if (this.time >= 0) {
 				cursor = '◼'
@@ -487,6 +490,7 @@
 
 	let sp = SUN.Sprite.COLOR_PALETTE_PICO()
 	let mesh = SUN.Mesh.CUBE(1)
+	let monkey = SUN.Mesh.LOAD_OBJ('./untitled.obj')
 	let camera = new SUN.Camera()
 	let camera2 = new SUN.Camera(new SUN.Vector3(1, 0, 0))
 
@@ -505,10 +509,7 @@
 		// ], 1, 0, 1)
 		// sc.Renderer.draw_Rect(rect, SUN.Color.RGB8(100, 0, 0, 80))
 		// sc.Renderer.draw_MultiString(100, 100, '123\nwshqk', font, SUN.Color.COLOR('white'), 1, 1, 0, 0, SUN.Color.RGB8(100, 0, 0),)
-		// for (let i = 0; i < 2000; i++)
-		// sc.Renderer.draw_Mesh(mesh, camera)
-
-		// sc.Renderer.draw_Mesh(mesh, camera)
+		// for (let i = 0; i < 10; i++)
 	}
 
 	gameconsole.run()

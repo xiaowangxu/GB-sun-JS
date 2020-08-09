@@ -23,6 +23,23 @@ export const Fn = {
 				}
 				break;
 		}
+	},
+
+	load(path) {
+		let xhr = new XMLHttpRequest()
+		let okStatus = document.location.protocol === "file:" ? 0 : 200
+		xhr.open('GET', path, false)
+		xhr.overrideMimeType("text/html;charset=utf-8")
+		xhr.send(null)
+		return xhr.status === okStatus ? xhr.responseText : null
+	},
+
+	swap(a, b) {
+		// console.log(a, b)
+		let c = a
+		a = b
+		b = c
+		// console.log(a, b)
 	}
 }
 
@@ -114,6 +131,22 @@ export class Mesh {
 		new TriFace(new Vector3(0, size, 0), new Vector3(size, size, size), new Vector3(size, size, 0)),
 		new TriFace(new Vector3(size, 0, size), new Vector3(0, 0, size), new Vector3(0, 0, 0)),
 		new TriFace(new Vector3(size, 0, size), new Vector3(0, 0, 0), new Vector3(size, 0, 0))])
+	}
+
+	static LOAD_OBJ(path) {
+		let lines = Fn.load(path).split('\n')
+		let points = []
+		let faces = []
+		lines.forEach((line) => {
+			let items = line.split(' ')
+			if (items[0] === 'v') {
+				points.push(new Vector3(parseFloat(items[1]), parseFloat(items[2]), parseFloat(items[3])))
+			}
+			else if (items[0] === 'f') {
+				faces.push(new TriFace(points[parseInt(items[1]) - 1], points[parseInt(items[2]) - 1], points[parseInt(items[3]) - 1]))
+			}
+		})
+		return new Mesh(faces)
 	}
 }
 
@@ -1774,7 +1807,88 @@ class Renderer {
 		this.draw_Line(face.p1, face.p3, color)
 	}
 
-	draw_Mesh(mesh, camera) {
+	fill_TriFace(faces, color = Color.COLOR('WHITE')) {
+		// 先按 y 排序
+		let t0 = faces.p1
+		let t1 = faces.p2
+		let t2 = faces.p3
+
+		if (t0.y > t1.y) {
+			let c = t0
+			t0 = t1
+			t1 = c
+		}
+		if (t0.y > t2.y) {
+			let c = t0
+			t0 = t2
+			t2 = c
+		}
+		if (t1.y > t2.y) {
+			let c = t1
+			t1 = t2
+			t2 = c
+		}
+
+		// std::cout<< t0.y << t1.y << t2.y << std::endl;
+		// 递增 y 画点
+		let total_height = t2.y - t0.y
+
+		for (let y = (t0.y); y <= (t1.y); y++) {
+			// 两条直线一起画
+			// 由于 segment_height 可能为 0 所以我们加 1
+			let segment_height = t1.y - t0.y
+			if (segment_height === 0) {
+				break
+			}
+			let alpha = (y - t0.y) / segment_height
+			let beta = (y - t0.y) / total_height
+			let A = t0.x + (t1.x - t0.x) * alpha
+			let B = t0.x + (t2.x - t0.x) * beta
+
+			if (A > B) {
+				let c = A
+				A = B
+				B = c
+			}
+
+			A = Math.floor(A)
+			B = Math.ceil(B)
+			// console.log(A, B)
+			// 连接两个点
+			for (let x = A; x <= B; x++) {
+				// console.log(A, B)
+				this.draw_Pixel(x, y, color)
+				// console.log(x,)
+			}
+
+		}
+		// 画第二部分
+		for (let y = (t1.y); y <= (t2.y); y++) {
+			// 两条直线一起画
+			let segment_height = t2.y - t1.y
+			if (segment_height === 0) {
+				break
+			}
+			let alpha = (y - t1.y) / segment_height
+			let beta = (y - t0.y) / total_height
+			let A = t1.x + (t2.x - t1.x) * alpha
+			let B = t0.x + (t2.x - t0.x) * beta
+
+			if (A > B) {
+				let c = A
+				A = B
+				B = c
+			}
+			A = Math.floor(A)
+			B = Math.ceil(B)
+			// 连接两个点
+			for (let x = A; x <= B; x++) {
+				this.draw_Pixel(x, y, color)
+			}
+		}
+	}
+
+	draw_Mesh(mesh, camera, shade = true) {
 		let angle = this.time * 0.001
 		let rx = new Matrix4([
 			[1, 0, 0, 0],
@@ -1786,7 +1900,7 @@ class Renderer {
 			[Math.sin(angle), Math.cos(angle), 0, 0],
 			[0, 0, 1, 0],
 			[0, 0, 0, 0]])
-		mesh.faces.forEach((face) => {
+		let sortedfaces = mesh.faces.map((face) => {
 			// console.log(face.normal)
 			// if (face.normal.z <= 0) return
 			let rf1 = face.p1.x_mat4(rz).x_mat4(rx)
@@ -1798,9 +1912,17 @@ class Renderer {
 			let f3 = new Vector3(rf3.x, rf3.y, rf3.z + 3)
 
 
-			let newface = new TriFace(f1, f2, f3)
-
-			// console.log(camera)
+			return new TriFace(f1, f2, f3)
+		})
+		sortedfaces.sort((a, b) => {
+			if ((a.p1.z + a.p2.z + a.p3.z) <= (b.p1.z + b.p2.z + b.p3.z)) {
+				return 1
+			}
+			else {
+				return -1
+			}
+		})
+		sortedfaces.forEach((newface) => {
 
 			if (newface.normal.dot(newface.p1.minus(camera.position)) >= 0) return
 
@@ -1822,10 +1944,15 @@ class Renderer {
 			pf3.y *= this.size.y / 2
 
 			let projectface = new TriFace(pf1, pf2, pf3)
+			let color = Color.RGB8(255, 255, 255)
+			if (shade) {
+				color.r = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
+				color.g = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
+				color.b = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
+			}
 
-
-
-			this.draw_TriFace(projectface)
+			this.fill_TriFace(projectface, color)
+			// this.draw_TriFace(projectface, color)
 		})
 	}
 
