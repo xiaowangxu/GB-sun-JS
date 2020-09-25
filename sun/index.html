@@ -42,24 +42,8 @@
 	import * as SUN from './GBsun.js'
 
 	let gameconsole = new SUN.sunConsole(256, 256)
-
 	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
-
 	let font = SUN.Font.DEFAULT()
-
-	gameconsole.init = (sc) => {
-
-		// for (let i = 0; i < 4; i++) {
-		// 	for (let j = 0; j < 4; j++) {
-		// 		let id = i * 4 + j
-		// 		const SIZE = sc.Renderer.size.x / 4
-		// 		sc.Renderer.draw_Rect(SUN.Rect.XYWH(j * SIZE, i * SIZE, SIZE, SIZE), SUN.Color.PICO(id))
-		// 	}
-		// }
-		// sc.Renderer.draw_Char(50, 50, SUN.Char.DEFAULT('B'), SUN.Color.PICO(0))
-
-
-	}
 
 	class PixelIndicate {
 		constructor() {
@@ -157,6 +141,13 @@
 			this.ins = []
 			this.idx = 0
 			this.backgroundcolor = SUN.Color.RGB8(20, 20, 20)
+			this.draw_buffer
+		}
+
+		init(width, height) {
+			this.draw_buffer = new SUN.Buffer(width, height, true)
+			// this.draw_buffer.fill(SUN.Color.COLOR())
+			// console.log(this.draw_buffer)
 		}
 
 		exec_Instruction(instruction, sc, delta) {
@@ -231,7 +222,7 @@
 					this.list.push([])
 				}
 				else if (arg.length === 1) {
-					this.list.push([arg[0], { font: font }])
+					this.list.push(['◻◻ ', { font: font }], [arg[0], { font: font }])
 					this.list.push([])
 				}
 			}
@@ -287,8 +278,8 @@
 				let y1 = arg[3]
 
 			}
-			else if (ins === 'BUFFER') {
-				console.log(sc.Renderer.buffer)
+			else if (ins === 'CLEARBUFFER') {
+				this.draw_buffer.fill(SUN.Color.COLOR('red'))
 			}
 			else if (ins === 'REBOOT') {
 				this.list = [['◻◻ '], [], ['◻◻ GAMEBOY SUN JS'], ['   0.0.1', { color: SUN.Color.RGB8(255, 255, 255, 50) }], [],
@@ -359,7 +350,7 @@
 
 		render(sc, delta) {
 			sc.Renderer.clear(this.backgroundcolor)
-			sc.Renderer.draw_Mesh(monkey, camera)
+			// sc.Renderer.draw_Mesh(monkey, camera)
 
 			let cursor
 			if (this.time >= 0) {
@@ -399,6 +390,7 @@
 				sc.Renderer.draw_Richtext(5, sc.Renderer.size.y - 4 - rect.size.y, array, 1, 0, 4)
 			}
 			this.time += delta
+			// sc.Renderer.draw_Buffer(0, 0, this.draw_buffer)
 		}
 	}
 
@@ -483,10 +475,13 @@
 	// let spriteeditor = new SpriteEditor()
 	let sunconsole = new Console()
 
+	gameconsole.init = (sc) => {
+		sunconsole.init(sc.Renderer.size.x, sc.Renderer.size.y)
+	}
+
 	gameconsole.action = (sc, delta) => {
 		sunconsole.update(sc, delta)
 	}
-
 
 	let sp = SUN.Sprite.COLOR_PALETTE_PICO()
 	let mesh = SUN.Mesh.CUBE(1)
@@ -494,22 +489,13 @@
 	let camera = new SUN.Camera()
 	let camera2 = new SUN.Camera(new SUN.Vector3(1, 0, 0))
 
-
 	gameconsole.render = (sc, delta) => {
 		sunconsole.render(sc, delta)
-		// for (let i = 0; i < 1000; i++) {
-		// 	// sc.Renderer.draw_Sprite(Math.round(Math.random() * 256 + 30), Math.round(Math.random() * 256 + 30), sp)
-		// 	// let x0 = Math.round(Math.random() * 256)
-		// 	sc.Renderer.draw_Line(new SUN.Vector2(Math.round(Math.random() * 256), Math.round(Math.random() * 256)), new SUN.Vector2(Math.round(Math.random() * 256), Math.round(Math.random() * 256)), SUN.Color.RGB(Math.random(), Math.random(), Math.random()))
-
-		// }
-		// let rect = sc.Renderer.draw_Richtext(100, 100, [
-		// 	['Ha', { font: font, split: 1, lineheight: 0, linesplit: 1, border: 0 }], [],
-		// 	[SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 1 }]
-		// ], 1, 0, 1)
-		// sc.Renderer.draw_Rect(rect, SUN.Color.RGB8(100, 0, 0, 80))
-		// sc.Renderer.draw_MultiString(100, 100, '123\nwshqk', font, SUN.Color.COLOR('white'), 1, 1, 0, 0, SUN.Color.RGB8(100, 0, 0),)
-		// for (let i = 0; i < 10; i++)
+		for (let i = 0; i <= Math.PI * 2; i += Math.PI / 12) {
+			let x = Math.cos(i) * 50
+			let y = Math.sin(i) * 50
+			sc.Renderer.draw_Line_MidPoint(new SUN.Vector2(200, 200), new SUN.Vector2(200 + x, 200 + y), SUN.Color.COLOR('white'))
+		}
 	}
 
 	gameconsole.run()

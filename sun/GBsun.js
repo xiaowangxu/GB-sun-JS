@@ -248,6 +248,9 @@ export class Color {
 	}
 
 	static COLOR(name) {
+		if (typeof (name) !== 'string' || name === undefined) {
+			return Color.RGB8(0, 0, 0, 0)
+		}
 		name = name.toLowerCase()
 		switch (name) {
 			default:
@@ -259,6 +262,11 @@ export class Color {
 			case 'red':
 				return Color.RGB8(255, 0, 0, 100)
 		}
+	}
+
+	static ADD(color1, color2) {
+		let ans = new Color(color1.r + color2.r, color1.g + color2.g, color1.b + color2.b)
+		return ans
 	}
 }
 
@@ -1630,15 +1638,25 @@ export function get_RichTextRect(array, split = 1, lineheight = 0, linesplit = 1
 }
 
 export class Buffer {
-	constructor(width, height) {
+	constructor(width, height, transparent = false) {
 		this.width = width
 		this.height = height
 		this.buffer = new ImageData(this.width, this.height)
 		this.blendstyle = 0
-		for (let i = 0; i < width; i++) {
-			for (let j = 0; j < height; j++) {
-				let id = (j * width + i) * 4
-				this.buffer.data[id + 3] = 255
+		if (!transparent) {
+			for (let i = 0; i < width; i++) {
+				for (let j = 0; j < height; j++) {
+					let id = (j * width + i) * 4
+					this.buffer.data[id + 3] = 255
+				}
+			}
+		}
+	}
+
+	fill(color) {
+		for (let i = 0; i < this.width; i++) {
+			for (let j = 0; j < this.height; j++) {
+				this.set_Pixel(i, j, color, 1)
 			}
 		}
 	}
@@ -1651,14 +1669,24 @@ export class Buffer {
 		}
 	}
 
-	set_Pixel(x, y, color) {
+	get_Pixel(x, y) {
+		let id = (y * this.width + x) * 4
+		return new Color(this.buffer.data[id + 0], this.buffer.data[id + 1], this.buffer.data[id + 2], this.buffer.data[id + 3] / 255 * 100)
+	}
+
+	set_Pixel(x, y, color, blendstyle) {
 		if (x < 0 || x >= this.width || y < 0 || y >= this.height) return
 		let r = 0
 		let g = 0
 		let b = 0
 		let id = (y * this.width + x) * 4
-		switch (this.blendstyle) {
+		if (blendstyle === undefined) blendstyle = this.blendstyle
+		switch (blendstyle) {
 			case 1:
+				r = color.r
+				g = color.g
+				b = color.b
+				this.buffer.data[id + 3] = color.a * 255
 				break
 			default:
 				let one_a = 1 - color.a
@@ -1695,6 +1723,7 @@ class Renderer {
 		this.size = new Vector2(width, height)
 		this.buffer = new Buffer(this.size.x, this.size.y)
 		this.time = 0
+		this.render_target = this.buffer
 
 		// 3d
 		this.near = 0.1
@@ -1713,22 +1742,36 @@ class Renderer {
 		this.canvas_context.putImageData(this.buffer.buffer, 0, 0)
 	}
 
+	set_RenderTarget(buffer) {
+		if (buffer instanceof Buffer) {
+			this.render_target = buffer
+		}
+		else {
+			throw new Error("set_RenderTarget needs a Buffer Instance")
+		}
+	}
+
+	draw_Buffer(x, y, buffer) {
+		for (let i = 0; i < buffer.width; i++) {
+			for (let j = 0; j < buffer.height; j++) {
+				// console.log(buffer.get_Pixel(i, j))
+				this.draw_Pixel(i + x, j + y, buffer.get_Pixel(i, j))
+			}
+		}
+	}
+
 	get_Canvas() {
 		return this.canvas
 	}
 
 	clear(color = Color.COLOR('BLACK')) {
-		this.buffer.fill_Rect(0, 0, this.size.x, this.size.y, color)
-		// this.canvas_context.fillStyle = color.get_Color()
-		// this.canvas_context.fillRect(0, 0, this.size.x, this.size.y)
+		this.buffer.fill(color)
 	}
 
 	draw_Pixel(x, y, color) {
-		// this.canvas_context.fillStyle = color.get_Color()
-		// this.canvas_context.fillRect(x, y, 1, 1)
 		x = Math.round(x)
 		y = Math.round(y)
-		this.buffer.set_Pixel(x, y, color)
+		this.render_target.set_Pixel(x, y, color)
 		return Rect.XYWH(x, y, 1, 1)
 	}
 
@@ -1798,6 +1841,37 @@ class Renderer {
 				}
 				this.draw_Pixel(x, y, color);
 			}
+		}
+	}
+
+	draw_Line_MidPoint(start, end, color) {
+		if (start.x >= end.x) {
+			let tempx = start.x
+			let tempy = start.y
+			start.x = end.x
+			end.x = tempx
+			start.y = end.y
+			end.y = tempy
+		}
+		let a = start.y - end.y
+		let b = end.x - start.x
+		let d = a + a + b
+		let delta1 = a + a
+		let delta2 = a + a + b + b
+		let x = start.x
+		let y = start.y
+		this.draw_Pixel(x, y, color)
+		while (x <= end.x) {
+			if (d < 0) {
+				x++
+				y++
+				d += delta2
+			}
+			else {
+				x++
+				d += delta1
+			}
+			this.draw_Pixel(x, y, color)
 		}
 	}
 
@@ -1944,11 +2018,22 @@ class Renderer {
 			pf3.y *= this.size.y / 2
 
 			let projectface = new TriFace(pf1, pf2, pf3)
-			let color = Color.RGB8(255, 255, 255)
+			let color
 			if (shade) {
-				color.r = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
-				color.g = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
-				color.b = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
+				let color1 = Color.RGB8(255, 0, 0)
+				let color2 = Color.RGB8(0, 255, 0)
+				let color3 = Color.RGB8(0, 0, 255)
+				color1.r = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * color1.r)
+				color1.g = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * color1.g)
+				color1.b = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * color1.b)
+				color2.r = Math.round(newface.normal.dot(new Vector3(1, 0, 0)) * color2.r)
+				color2.g = Math.round(newface.normal.dot(new Vector3(1, 0, 0)) * color2.g)
+				color2.b = Math.round(newface.normal.dot(new Vector3(1, 0, 0)) * color2.b)
+				color3.r = Math.round(newface.normal.dot(new Vector3(0, 0, -1)) * color3.r)
+				color3.g = Math.round(newface.normal.dot(new Vector3(0, 0, -1)) * color3.g)
+				color3.b = Math.round(newface.normal.dot(new Vector3(0, 0, -1)) * color3.b)
+				color = Color.ADD(color1, color2)
+				color = Color.ADD(color, color3)
 			}
 
 			this.fill_TriFace(projectface, color)
