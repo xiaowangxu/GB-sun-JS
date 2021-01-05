@@ -40,6 +40,10 @@ export const Fn = {
 		a = b
 		b = c
 		// console.log(a, b)
+	},
+
+	percent(a, b, x) {
+		return (x - a) / (b - a)
 	}
 }
 
@@ -49,6 +53,372 @@ export class Vector2 {
 		this.x = x
 		this.y = y
 	}
+
+	minus(vec) {
+		return new Vector2(this.x - vec.x, this.y - vec.y)
+	}
+
+	add(vec) {
+		return new Vector2(this.x + vec.x, this.y + vec.y)
+	}
+
+	copy(vec) {
+		this.x = vec.x
+		this.y = vec.y
+	}
+
+	length() {
+		return Math.sqrt(this.x * this.x + this.y * this.y)
+	}
+
+	normalize() {
+		let length = this.length()
+		return new Vector3(this.x / length, this.y / length)
+	}
+}
+
+export class Matrix3 {
+	constructor(elem) {
+		this.mat = elem
+	}
+
+	static ROTATE(angle) {
+		let data = [[Math.cos(angle), Math.sin(angle), 0], [-Math.sin(angle), Math.cos(angle), 0], [0, 0, 1]]
+		return new Matrix3(data)
+	}
+
+	static TRANSLATE(x, y) {
+		let data = [[1, 0, x], [0, 1, y], [0, 0, 1]]
+		return new Matrix3(data)
+	}
+
+	static SCALE(scale) {
+		let data = [[scale, 0, 0], [0, scale, 0], [0, 0, 1]]
+		return new Matrix3(data)
+	}
+
+	times(mat) {
+		let ans = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+		for (let j = 0; j < 3; j++)
+			for (let i = 0; i < 3; i++)
+				ans[i][j] = this.mat[i][0] * mat.mat[0][j] + this.mat[i][1] * mat.mat[1][j] + this.mat[i][2] * mat.mat[2][j]
+		return new Matrix3(ans)
+	}
+}
+
+export class Line2D {
+	constructor(x0, y0, x1, y1) {
+		this.x0 = x0
+		this.y0 = y0
+		this.x1 = x1
+		this.y1 = y1
+	}
+
+	cut(rect) {
+		const INSIDE = 0, LEFT = 1, RIGHT = 2, BOTTOM = 4, TOP = 8
+		function encode(x, y, xmin, xmax, ymin, ymax) {
+			let c = 0
+
+			if (x < xmin)
+				c |= LEFT
+			if (x > xmax)
+				c |= RIGHT
+			if (y < ymin)
+				c |= BOTTOM
+			if (y > ymax)
+				c |= TOP
+			return c
+		}
+
+		let x0 = this.x0
+		let x1 = this.x1
+		let y0 = this.y0
+		let y1 = this.y1
+		let xmin = rect.position.x
+		let xmax = rect.position.x + rect.size.x
+		let ymin = rect.position.y
+		let ymax = rect.position.y + rect.size.y
+
+		let code1, code2, code, k, b, x, y
+		code1 = encode(x0, y0, xmin, xmax, ymin, ymax)
+		code2 = encode(x1, y1, xmin, xmax, ymin, ymax)
+		while (code1 != 0 || code2 != 0) {
+			if ((code1 & code2) != 0) {
+				return null
+			}
+			code = code1
+			if (code1 == 0)
+				code = code2
+			k = (y1 - y0) / (x1 - x0)
+			b = y1 - k * x1
+			if ((LEFT & code) != 0) {
+				x = xmin
+				y = k * xmin + b
+			}
+			if ((RIGHT & code) != 0) {
+				x = xmax
+				y = k * xmax + b
+			}
+			if ((BOTTOM & code) != 0) {
+				y = ymin
+				x = (y - b) / k
+			}
+			if ((TOP & code) != 0) {
+				y = ymax
+				x = (y - b) / k
+			}
+			if (code == code1) {
+				x0 = x
+				y0 = y
+				code1 = encode(x, y, xmin, xmax, ymin, ymax)
+			}
+			else {
+				x1 = x
+				y1 = y
+				code2 = encode(x, y, xmin, xmax, ymin, ymax)
+			}
+		}
+
+		x0 = Math.round(x0)
+		y0 = Math.round(y0)
+		x1 = Math.round(x1)
+		y0 = Math.round(y0)
+
+
+		return new Line2D(x0, y0, x1, y1)
+	}
+
+	copy() {
+		return new Line2D(this.x0, this.y0, this.x1, this.y1)
+	}
+}
+
+export class Polygon2D {
+	constructor(array = []) {
+		this.pointlist = array
+	}
+
+	add_Point(point) {
+		this.pointlist.push(point)
+	}
+
+	cut(rect) {
+		let pointlist = this.pointlist.map((point) => {
+			return new Vector2(point.x, point.y)
+		})
+		function judge_Top(x0, y0, x1, y1, xmin, ymin, xmax, ymax) {
+			if (y0 < ymin && y1 < ymin) {
+				return null
+			}
+			else if (y0 >= ymin && y1 >= ymin) {
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+
+			}
+			else if (y0 < ymin && y1 >= ymin) {
+				if (x1 - x0 === 0) {
+					return { x0: x0, y0: ymin, x1: x1, y1: y1 }
+				}
+				let k = (y1 - y0) / (x1 - x0)
+				let b = y1 - k * x1
+				y0 = ymin
+				x0 = (y0 - b) / k
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+
+			else {
+				if (x1 - x0 === 0) {
+					return { x0: x0, y0: y0, x1: x1, y1: ymin }
+				}
+				let k = (y1 - y0) / (x1 - x0)
+				let b = y1 - k * x1
+				y1 = ymin
+				x1 = (y1 - b) / k
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+
+		}
+		function judge_Bottom(x0, y0, x1, y1, xmin, ymin, xmax, ymax) {
+			if (y0 < ymax && y1 < ymax) {
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+
+			}
+			else if (y0 < ymax && y1 >= ymax) {
+				if (x1 - x0 === 0) {
+					return { x0: x0, y0: y0, x1: x1, y1: ymax }
+				}
+				let k = (y1 - y0) / (x1 - x0)
+				let b = y1 - k * x1
+				y1 = ymax
+				x1 = (y1 - b) / k
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+			else if (y0 >= ymax && y1 < ymax) {
+				if (x1 - x0 === 0) {
+					return { x0: x0, y0: ymax, x1: x1, y1: y1 }
+				}
+				let k = (y1 - y0) / (x1 - x0)
+				let b = y1 - k * x1
+				y0 = ymax
+				x0 = (y0 - b) / k
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+			else {
+				return null
+			}
+		}
+		function judge_Left(x0, y0, x1, y1, xmin, ymin, xmax, ymax) {
+			let k = (y1 - y0) / (x1 - x0)
+			if (x0 < xmin && x1 < xmin) {
+				return null
+			}
+			else if (x0 < xmin && x1 >= xmin) {
+				let b = y1 - k * x1
+				x0 = xmin
+				y0 = k * xmin + b
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+			else if (x0 >= xmin && x1 < xmin) {
+				let b = y1 - k * x1
+				x1 = xmin
+				y1 = k * xmin + b
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+
+			}
+			else {
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+		}
+		function judge_Right(x0, y0, x1, y1, xmin, ymin, xmax, ymax) {
+			let k = (y1 - y0) / (x1 - x0)
+			if (x0 < xmax && x1 < xmax) {
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+			else if (x0 < xmax && x1 >= xmax) {
+				let b = y1 - k * x1
+				x1 = xmax
+				y1 = xmax * k + b
+				return { x0: x0, y0: y0, x1: x1, y1: y1 }
+			}
+			else if (x0 >= xmax && x1 < xmax) {
+				let b = y1 - k * x1
+				x0 = xmax
+				y0 = xmax * k + b
+				return { x0: x0, x1: x1, y0: y0, y1: y1 }
+
+			}
+			else {
+				return null
+			}
+
+		}
+
+		//Left
+		{
+			let newpointlist = []
+			for (let i = 1; i < pointlist.length; i++) {
+				let from = pointlist[i - 1]
+				let to = pointlist[i]
+				let newline = judge_Left(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+				if (newline !== null) {
+					newpointlist.push(new Vector2(newline.x0, newline.y0))
+					newpointlist.push(new Vector2(newline.x1, newline.y1))
+				}
+			}
+			{
+				if (pointlist.length >= 2) {
+					let from = pointlist[pointlist.length - 1]
+					let to = pointlist[0]
+					let newline = judge_Left(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+					if (newline !== null) {
+						newpointlist.push(new Vector2(newline.x0, newline.y0))
+						newpointlist.push(new Vector2(newline.x1, newline.y1))
+					}
+				}
+
+			}
+			pointlist = newpointlist
+		}
+		//Top
+		{
+			let newpointlist = []
+			for (let i = 1; i < pointlist.length; i++) {
+				let from = pointlist[i - 1]
+				let to = pointlist[i]
+				let newline = judge_Top(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+				if (newline !== null) {
+					newpointlist.push(new Vector2(newline.x0, newline.y0))
+					newpointlist.push(new Vector2(newline.x1, newline.y1))
+				}
+			}
+			{
+				if (pointlist.length >= 2) {
+					let from = pointlist[pointlist.length - 1]
+					let to = pointlist[0]
+					let newline = judge_Top(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+					if (newline !== null) {
+						newpointlist.push(new Vector2(newline.x0, newline.y0))
+						newpointlist.push(new Vector2(newline.x1, newline.y1))
+					}
+				}
+
+			}
+			pointlist = newpointlist
+		}
+		//Right
+		{
+			let newpointlist = []
+			for (let i = 1; i < pointlist.length; i++) {
+				let from = pointlist[i - 1]
+				let to = pointlist[i]
+				let newline = judge_Right(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+				if (newline !== null) {
+					newpointlist.push(new Vector2(newline.x0, newline.y0))
+					newpointlist.push(new Vector2(newline.x1, newline.y1))
+				}
+			}
+			{
+				if (pointlist.length >= 2) {
+					let from = pointlist[pointlist.length - 1]
+					let to = pointlist[0]
+					let newline = judge_Right(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+					if (newline !== null) {
+						newpointlist.push(new Vector2(newline.x0, newline.y0))
+						newpointlist.push(new Vector2(newline.x1, newline.y1))
+					}
+				}
+
+			}
+			pointlist = newpointlist
+		}
+		//Top
+		{
+			let newpointlist = []
+			for (let i = 1; i < pointlist.length; i++) {
+				let from = pointlist[i - 1]
+				let to = pointlist[i]
+				let newline = judge_Bottom(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+				if (newline !== null) {
+					newpointlist.push(new Vector2(newline.x0, newline.y0))
+					newpointlist.push(new Vector2(newline.x1, newline.y1))
+				}
+			}
+			{
+				if (pointlist.length >= 2) {
+					let from = pointlist[pointlist.length - 1]
+					let to = pointlist[0]
+					let newline = judge_Bottom(from.x, from.y, to.x, to.y, rect.position.x, rect.position.y, rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+					if (newline !== null) {
+						newpointlist.push(new Vector2(newline.x0, newline.y0))
+						newpointlist.push(new Vector2(newline.x1, newline.y1))
+					}
+				}
+
+			}
+			pointlist = newpointlist
+		}
+
+		return new Polygon2D(pointlist)
+	}
 }
 
 export class Vector3 {
@@ -56,6 +426,15 @@ export class Vector3 {
 		this.x = x
 		this.y = y
 		this.z = z
+	}
+
+	x_mat3(mat) {
+		let i = this
+		let m = mat.mat
+		let x = i.x * m[0][0] + i.y * m[0][1] + i.z * m[0][2]
+		let y = i.x * m[1][0] + i.y * m[1][1] + i.z * m[1][2]
+		let z = i.x * m[2][0] + i.y * m[2][1] + i.z * m[2][2]
+		return new Vector3(x, y, z)
 	}
 
 	x_mat4(mat) {
@@ -248,6 +627,9 @@ export class Color {
 	}
 
 	static COLOR(name) {
+		if (typeof (name) !== 'string' || name === undefined) {
+			return Color.RGB8(0, 0, 0, 0)
+		}
 		name = name.toLowerCase()
 		switch (name) {
 			default:
@@ -258,10 +640,118 @@ export class Color {
 				return Color.RGB8(255, 255, 255, 100)
 			case 'red':
 				return Color.RGB8(255, 0, 0, 100)
+			case 'blue':
+				return Color.RGB8(0, 0, 255, 100)
 		}
+	}
+
+	static ADD(color1, color2) {
+		let ans = new Color(color1.r + color2.r, color1.g + color2.g, color1.b + color2.b)
+		return ans
 	}
 }
 
+export class EdgeTable {
+	constructor() {
+		this.list = []
+	}
+
+	add_Edge(x1, y1, x2, y2) {
+		// console.log("add_line ", x1, y1, x2, y2)
+		x1 = Math.round(x1)
+		x2 = Math.round(x2)
+		y1 = Math.round(y1)
+		y2 = Math.round(y2)
+		if (y2 < y1) { // y2 >= y1
+			let tmp = x1
+			x1 = x2
+			x2 = tmp
+			tmp = y1
+			y1 = y2
+			y2 = tmp
+		}
+		let dx = x2 - x1
+		let dy = y2 - y1
+		if (dy !== 0) {
+			if (dx === 0) {
+				// console.log(">>>0")
+				this.add(y1, x1, y2, 0)
+			}
+			else {
+				// console.log(">>>1")
+				this.add(y1, x1, y2, dx / dy)
+			}
+		}
+	}
+
+	add(y1, x, y2, m) {
+		for (let i = 0; i < this.list.length; i++) {
+			let line = this.list[i]
+			let line_y = line.y
+			if (line_y === y1) {// same line
+				// console.log(">>>>0")
+				for (let j = 0; j < line.list.length; j++) {
+					let this_line = line.list[j]
+					if (this_line.x === line.x) {
+						// console.log(">>>>1")
+						if (this_line.m <= line.m) {
+							// console.log(">>>>2")
+							array.splice(j, 0, { x: x, y: y2, m: m })
+							return
+						}
+					}
+					else if (this_line.x > line.x) {
+						array.splice(j, 0, { x: x, y: y2, m: m })
+						return
+					}
+				}
+				line.list.push({ x: x, y: y2, m: m })
+				return
+			}
+			else if (line_y > y1) {// insert
+				this.list.splice(i, 0, { y: y1, list: [{ x: x, y: y2, m: m }] })
+				return
+			}
+		}
+		this.list.push({ y: y1, list: [{ x: x, y: y2, m: m }] })
+	}
+
+	get_StartY() {
+		if (this.list.length === 0) return 0
+		return this.list[0].y
+	}
+
+	get_LastY() {
+		if (this.list.length === 0) return 0
+		return this.list[this.list.length - 1].y
+	}
+
+	copy(edge) {
+		return { y: edge.y, x: edge.x, m: edge.m }
+	}
+
+	get_Line(line) {
+		if (this.list.length === 0) return []
+		for (let i = 0; i < this.list.length; i++) {
+			let this_line = this.list[i]
+			if (this_line.y > line) return []
+			else if (this_line.y === line) {
+				return this_line.list.map((edge) => { return this.copy(edge) })
+			}
+		}
+		return []
+	}
+
+	print() {
+		this.list.forEach((line) => {
+			let str = '[' + line.y + ']'
+			line.list.forEach((edge) => {
+				str += '->' + '[' + edge.y + ',' + edge.x + ',' + edge.m + ']'
+			})
+			console.log(str)
+		})
+	}
+}
 
 //************************************
 //           Render Obj
@@ -310,11 +800,11 @@ export class Sprite {
 }
 
 export class Char {
-	constructor(pointarray, shiftup = 0, shiftleft = 0) {
+	constructor(pointarray, shiftup = 0, shiftleft = 0, height) {
 		this.pointarray = pointarray
 		this.shiftup = shiftup
 		this.shiftleft = shiftleft
-		this.height = pointarray.length
+		this.height = height || pointarray.length
 		this.width = 0
 		for (let i = 0; i < pointarray.length; i++) {
 			this.width = Math.max(this.width, pointarray[i].length)
@@ -502,7 +992,7 @@ export class Char {
 						[0, 0, 0, 1],
 						[0, 1, 1, 0]
 					],
-					-2, 0
+					-2, 0, 6
 				)
 			case 'H':
 				return new Char(
@@ -582,7 +1072,7 @@ export class Char {
 						[0, 1],
 						[1, 0]
 					],
-					-0, 0
+					-0, 0, 6
 				)
 			case 'K':
 				return new Char(
@@ -732,7 +1222,7 @@ export class Char {
 						[1, 0, 0, 0],
 						[1, 0, 0, 0]
 					],
-					-2, 0
+					-2, 0, 6
 				)
 			case 'Q':
 				return new Char(
@@ -758,7 +1248,7 @@ export class Char {
 						[0, 0, 0, 1],
 						[0, 0, 0, 1]
 					],
-					-2, 0
+					-2, 0, 6
 				)
 			case 'R':
 				return new Char(
@@ -954,7 +1444,7 @@ export class Char {
 						[0, 0, 0, 1],
 						[0, 1, 1, 0]
 					],
-					-2, 0
+					-2, 0, 6
 				)
 			case 'Z':
 				return new Char(
@@ -1234,54 +1724,46 @@ export class Char {
 			case '+':
 				return new Char(
 					[
-						[0, 0, 0, 0, 0],
 						[0, 0, 1, 0, 0],
 						[0, 0, 1, 0, 0],
 						[1, 1, 1, 1, 1],
 						[0, 0, 1, 0, 0],
 						[0, 0, 1, 0, 0],
-						[0, 0, 0, 0, 0]
 					],
-					0, 0
+					-2, 0
 				)
 			case '-':
 				return new Char(
 					[
 						[0, 0, 0, 0],
 						[0, 0, 0, 0],
-						[0, 0, 0, 0],
 						[1, 1, 1, 1],
-						[0, 0, 0, 0],
 						[0, 0, 0, 0],
 						[0, 0, 0, 0]
 					],
-					0, 0
+					-2, 0
 				)
 			case '=':
 				return new Char(
 					[
 						[0, 0, 0, 0],
-						[0, 0, 0, 0],
 						[1, 1, 1, 1],
 						[0, 0, 0, 0],
 						[1, 1, 1, 1],
-						[0, 0, 0, 0],
 						[0, 0, 0, 0]
 					],
-					0, 0
+					-2, 0
 				)
 			case '*':
 				return new Char(
 					[
-						[0, 0, 0, 0, 0],
 						[1, 0, 0, 0, 1],
 						[0, 1, 0, 1, 0],
 						[0, 0, 1, 0, 0],
 						[0, 1, 0, 1, 0],
-						[1, 0, 0, 0, 1],
-						[0, 0, 0, 0, 0]
+						[1, 0, 0, 0, 1]
 					],
-					0, 0
+					-2, 0
 				)
 			case '/':
 				return new Char(
@@ -1535,7 +2017,7 @@ export class Font {
 			}
 			else {
 				let char = this.get(id)
-				height = Math.max(height, char.height - char.shiftup)
+				height = Math.max(height, char.height)
 				width += char.width - char.shiftleft
 			}
 			width += split
@@ -1630,15 +2112,25 @@ export function get_RichTextRect(array, split = 1, lineheight = 0, linesplit = 1
 }
 
 export class Buffer {
-	constructor(width, height) {
+	constructor(width, height, transparent = false) {
 		this.width = width
 		this.height = height
 		this.buffer = new ImageData(this.width, this.height)
 		this.blendstyle = 0
-		for (let i = 0; i < width; i++) {
-			for (let j = 0; j < height; j++) {
-				let id = (j * width + i) * 4
-				this.buffer.data[id + 3] = 255
+		if (!transparent) {
+			for (let i = 0; i < width; i++) {
+				for (let j = 0; j < height; j++) {
+					let id = (j * width + i) * 4
+					this.buffer.data[id + 3] = 255
+				}
+			}
+		}
+	}
+
+	fill(color) {
+		for (let i = 0; i < this.width; i++) {
+			for (let j = 0; j < this.height; j++) {
+				this.set_Pixel(i, j, color, 1)
 			}
 		}
 	}
@@ -1651,14 +2143,24 @@ export class Buffer {
 		}
 	}
 
-	set_Pixel(x, y, color) {
+	get_Pixel(x, y) {
+		let id = (y * this.width + x) * 4
+		return new Color(this.buffer.data[id + 0], this.buffer.data[id + 1], this.buffer.data[id + 2], this.buffer.data[id + 3] / 255 * 100)
+	}
+
+	set_Pixel(x, y, color, blendstyle) {
 		if (x < 0 || x >= this.width || y < 0 || y >= this.height) return
 		let r = 0
 		let g = 0
 		let b = 0
 		let id = (y * this.width + x) * 4
-		switch (this.blendstyle) {
+		if (blendstyle === undefined) blendstyle = this.blendstyle
+		switch (blendstyle) {
 			case 1:
+				r = color.r
+				g = color.g
+				b = color.b
+				this.buffer.data[id + 3] = color.a * 255
 				break
 			default:
 				let one_a = 1 - color.a
@@ -1695,6 +2197,7 @@ class Renderer {
 		this.size = new Vector2(width, height)
 		this.buffer = new Buffer(this.size.x, this.size.y)
 		this.time = 0
+		this.render_target = this.buffer
 
 		// 3d
 		this.near = 0.1
@@ -1713,32 +2216,41 @@ class Renderer {
 		this.canvas_context.putImageData(this.buffer.buffer, 0, 0)
 	}
 
+	set_RenderTarget(buffer) {
+		if (buffer instanceof Buffer) {
+			this.render_target = buffer
+		}
+		else {
+			throw new Error("set_RenderTarget needs a Buffer Instance")
+		}
+	}
+
+	draw_Buffer(x, y, buffer) {
+		for (let i = 0; i < buffer.width; i++) {
+			for (let j = 0; j < buffer.height; j++) {
+				// console.log(buffer.get_Pixel(i, j))
+				this.draw_Pixel(i + x, j + y, buffer.get_Pixel(i, j))
+			}
+		}
+	}
+
 	get_Canvas() {
 		return this.canvas
 	}
 
 	clear(color = Color.COLOR('BLACK')) {
-		this.buffer.fill_Rect(0, 0, this.size.x, this.size.y, color)
-		// this.canvas_context.fillStyle = color.get_Color()
-		// this.canvas_context.fillRect(0, 0, this.size.x, this.size.y)
+		this.buffer.fill(color)
 	}
 
 	draw_Pixel(x, y, color) {
-		// this.canvas_context.fillStyle = color.get_Color()
-		// this.canvas_context.fillRect(x, y, 1, 1)
 		x = Math.round(x)
 		y = Math.round(y)
-		this.buffer.set_Pixel(x, y, color)
+		this.render_target.set_Pixel(x, y, color)
 		return Rect.XYWH(x, y, 1, 1)
 	}
 
+	// GBsun.js 自带draw line 函数
 	draw_Line(start, end, color) {
-		// this.canvas_context.beginPath()
-		// this.canvas_context.moveTo(start.x, start.y)
-		// this.canvas_context.lineTo(end.x, end.y)
-		// this.canvas_context.lineWidth = width
-		// this.canvas_context.strokeStyle = color.get_Color()
-		// this.canvas_context.stroke()
 		start = new Vector2(Math.round(start.x), Math.round(start.y))
 		end = new Vector2(Math.round(end.x), Math.round(end.y))
 
@@ -1797,6 +2309,291 @@ class Renderer {
 					py = py + 2 * (dx1 - dy1);
 				}
 				this.draw_Pixel(x, y, color);
+			}
+		}
+	}
+
+	// CG DDA
+	draw_Line_DDA(x1, y1, x2, y2, color) {
+		let x, y, dx, dy, k
+		dx = x2 - x1
+		dy = y2 - y1
+		if (dx === 0) {
+			if (y2 >= y1) {
+				for (let i = y1; i <= y2; i++) {
+					this.draw_Pixel(x1, i, color)
+				}
+			}
+			else {
+				for (let i = y2; i >= y1; i--) {
+					this.draw_Pixel(x1, i, color)
+				}
+			}
+		}
+		{
+			k = dy / dx
+			if (Math.abs(k) <= 1) {
+				y = y1
+				if (x2 < x1)
+					for (x = x1; x >= x2; x--) {
+						this.draw_Pixel(x, parseInt(y + 0.5), color)
+						y = y - k
+					}
+
+				for (x = x1; x <= x2; x++) {
+					this.draw_Pixel(x, parseInt(y + 0.5), color)
+					y = y + k
+				}
+			}
+			else {
+				x = x1
+				if (y2 < y1) {
+					for (y = y1; y >= y2; y--) {
+						this.draw_Pixel(parseInt(x + 0.5), y, color)
+						x = x - 1 / k
+
+					}
+				}
+				else {
+					for (y = y1; y <= y2; y++) {
+						this.draw_Pixel(parseInt(x + 0.5), y, color)
+						x = x + 1 / k
+					}
+				}
+			}
+		}
+	}
+
+	// CG MID
+	draw_Line_MID(start, end, color) {
+		let k = Math.abs((end.y - start.y) / (end.x - start.x))
+		if ((end.y - start.y) >= 0 && (end.x - start.x) >= 0 || (end.y - start.y) <= 0 && (end.x - start.x) <= 0) {
+			if (k <= 1) {
+				if (start.x >= end.x) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let a = start.y - end.y
+				let b = end.x - start.x
+				let d = a + a + b
+				let delta1 = a + a
+				let delta2 = a + a + b + b
+				let x = start.x
+				let y = start.y
+				this.draw_Pixel(x, y, color)
+				while (x < end.x) {
+					if (d < 0) {
+						x++
+						y++
+						d += delta2
+					}
+					else {
+						x++
+						d += delta1
+					}
+					this.draw_Pixel(x, y, color)
+				}
+			}
+			else {
+				if (start.y >= end.y) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let a = start.x - end.x
+				let b = end.y - start.y
+				let d = a + a + b
+				let delta1 = a + a
+				let delta2 = a + a + b + b
+				let x = start.x
+				let y = start.y
+				this.draw_Pixel(x, y, color)
+				while (y < end.y) {
+					if (d < 0) {
+						x++
+						y++
+						d += delta2
+					}
+					else {
+						y++
+						d += delta1
+					}
+					this.draw_Pixel(x, y, color)
+				}
+			}
+		}
+		else {
+			if (k <= 1) {
+				if (start.x <= end.x) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let a = start.y - end.y
+				let b = start.x - end.x
+				let d = a + a + b
+				let delta1 = a + a
+				let delta2 = a + a + b + b
+				let x = start.x
+				let y = start.y
+				this.draw_Pixel(x, y, color)
+				while (x > end.x) {
+					if (d < 0) {
+						x--
+						y++
+						d += delta2
+					}
+					else {
+						x--
+						d += delta1
+					}
+					this.draw_Pixel(x, y, color)
+				}
+			}
+			else {
+				if (start.y <= end.y) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let a = start.x - end.x
+				let b = start.y - end.y
+				let d = a + a + b
+				let delta1 = a + a
+				let delta2 = a + a + b + b
+				let x = start.x
+				let y = start.y
+				this.draw_Pixel(x, y, color)
+				while (y > end.y) {
+					if (d < 0) {
+						x++
+						y--
+						d += delta2
+					}
+					else {
+						y--
+						d += delta1
+					}
+					this.draw_Pixel(x, y, color)
+				}
+			}
+		}
+	}
+
+	// CG BYE
+	draw_Line_BYE(start, end, color) {
+		let k = Math.abs((end.y - start.y) / (end.x - start.x))
+		if ((end.y - start.y) >= 0 && (end.x - start.x) >= 0 || (end.y - start.y) <= 0 && (end.x - start.x) <= 0) {
+			if (k <= 1) {
+				if (start.x >= end.x) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let x = start.x
+				let y = start.y
+				let dx = end.x - start.x
+				let dy = end.y - start.y
+				let e = -dx
+				for (let i = 0; i <= dx; i++) {
+					this.draw_Pixel(x, y, color)
+					x++
+					e += dy + dy
+					if (e >= 0) {
+						y++
+						e -= dx + dx
+					}
+				}
+			}
+			else {
+				if (start.y >= end.y) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let x = start.x
+				let y = start.y
+				let dx = end.x - start.x
+				let dy = end.y - start.y
+				let e = -dy
+				for (let i = 0; i <= dy; i++) {
+					this.draw_Pixel(x, y, color)
+					y++
+					e += dx + dx
+					if (e >= 0) {
+						x++
+						e -= dy + dy
+					}
+				}
+			}
+		}
+		else {
+			if (k <= 1) {
+				if (start.x <= end.x) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let x = start.x
+				let y = start.y
+				let dx = start.x - end.x
+				let dy = end.y - start.y
+				let e = -dx
+				for (let i = 0; i <= dx; i++) {
+					this.draw_Pixel(x, y, color)
+					x--
+					e += dy + dy
+					if (e >= 0) {
+						y++
+						e -= dx + dx
+					}
+				}
+			}
+			else {
+				if (start.y <= end.y) {
+					let tempx = start.x
+					let tempy = start.y
+					start.x = end.x
+					end.x = tempx
+					start.y = end.y
+					end.y = tempy
+				}
+				let x = start.x
+				let y = start.y
+				let dx = end.x - start.x
+				let dy = start.y - end.y
+				let e = dy
+				for (let i = 0; i <= dy; i++) {
+					this.draw_Pixel(x, y, color)
+					y--
+					e -= dx + dx
+					if (e <= 0) {
+						x++
+						e += dy + dy
+					}
+				}
 			}
 		}
 	}
@@ -1944,11 +2741,22 @@ class Renderer {
 			pf3.y *= this.size.y / 2
 
 			let projectface = new TriFace(pf1, pf2, pf3)
-			let color = Color.RGB8(255, 255, 255)
+			let color
 			if (shade) {
-				color.r = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
-				color.g = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
-				color.b = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * 100)
+				let color1 = Color.RGB8(255, 0, 0)
+				let color2 = Color.RGB8(0, 255, 0)
+				let color3 = Color.RGB8(0, 0, 255)
+				color1.r = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * color1.r)
+				color1.g = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * color1.g)
+				color1.b = Math.round(newface.normal.dot(new Vector3(0, 1, 0)) * color1.b)
+				color2.r = Math.round(newface.normal.dot(new Vector3(1, 0, 0)) * color2.r)
+				color2.g = Math.round(newface.normal.dot(new Vector3(1, 0, 0)) * color2.g)
+				color2.b = Math.round(newface.normal.dot(new Vector3(1, 0, 0)) * color2.b)
+				color3.r = Math.round(newface.normal.dot(new Vector3(0, 0, -1)) * color3.r)
+				color3.g = Math.round(newface.normal.dot(new Vector3(0, 0, -1)) * color3.g)
+				color3.b = Math.round(newface.normal.dot(new Vector3(0, 0, -1)) * color3.b)
+				color = Color.ADD(color1, color2)
+				color = Color.ADD(color, color3)
 			}
 
 			this.fill_TriFace(projectface, color)
@@ -1961,6 +2769,36 @@ class Renderer {
 		return rect
 	}
 
+	// CG 八对称画圆
+	draw_Circle(x, y, radius, color) {
+		let that = this
+		function draw_CirclePixel(ox, oy, x, y, color) {
+			that.draw_Pixel(ox + x, oy + y, color)
+			that.draw_Pixel(ox + y, oy + x, color)
+			that.draw_Pixel(ox - x, oy + y, color)
+			that.draw_Pixel(ox - y, oy + x, color)
+			that.draw_Pixel(ox + x, oy - y, color)
+			that.draw_Pixel(ox + y, oy - x, color)
+			that.draw_Pixel(ox - x, oy - y, color)
+			that.draw_Pixel(ox - y, oy - x, color)
+		}
+		let nx = 0, ny = radius, e = 1 - radius
+		draw_CirclePixel(x, y, nx, ny, color)
+		while (nx <= ny) {
+			if (e < 0) {
+				e += 2 * nx + 3
+			}
+			else {
+				e += 2 * (nx - ny) + 5
+				ny--
+			}
+			nx++
+			draw_CirclePixel(x, y, nx, ny, color)
+		}
+		let size = radius + radius
+		return Rect.XYWH(x - radius, y - radius, size, size)
+	}
+
 	draw_Sprite(x, y, sprite, scale = 1) {
 		for (let i = 0; i < sprite.height; i++) {
 			for (let j = 0; j < sprite.width; j++) {
@@ -1971,17 +2809,88 @@ class Renderer {
 		return Rect.XYWH(x, y, sprite.width * scale, sprite.height * scale)
 	}
 
-	draw_Char(x, y, char, color) {
-		// console.log(char)
+	draw_Polygon_ScanLine(poly, color) {
+		let list = []
+		let line_i = poly.get_StartY()
+		let last_i = poly.get_LastY()
+		function next(line) {
+			line.x = line.x + line.m
+		}
+		function remove(y) {
+			let i = 0
+			while (i < list.length) {
+				if (list[i].y <= y) {
+					list.splice(i, 1)
+				}
+				else {
+					i++
+				}
+			}
+		}
+		function add(line) {
+			// console.info(line)
+			for (let i = 0; i < list.length; i++) {
+				let this_line = list[i]
+				if (this_line.x === line.x) {
+					// console.log(">>>>1")
+					if (this_line.m >= line.m) {
+						// console.log(">>>>2")
+						list.splice(i, 0, line)
+						return
+					}
+				}
+				else if (this_line.x > line.x) {
+					list.splice(i, 0, line)
+					return
+				}
+			}
+			list.push(line)
+		}
+
+		poly.get_Line(line_i).forEach((line) => {
+			add(line)
+		})
+		while (list.length > 0 || line_i < last_i) {
+			// let draw = false
+			let last = false
+			let last_x = 0
+			// let str = "[" + line_i + "]  "
+			list.forEach((line, index) => {
+				// str += /* "[" + last_x + "]->" +  */"[" + JSON.stringify(line) + "]  "
+				if (!last) {
+					last_x = Math.round(line.x)
+				}
+				else {
+					// console.log("draw_line", last_x)
+					this.draw_Line_DDA(last_x, line_i, Math.round(line.x), line_i, color)
+				}
+				last = !last
+				next(line)
+			})
+			// console.log(str)
+			line_i++
+			poly.get_Line(line_i).forEach((line) => {
+				add(line)
+			})
+			remove(line_i)
+
+			// console.log(line_i, JSON.stringify(poly.get_Line(line_i)))
+
+			// console.log(JSON.stringify(list, null, 2))
+		}
+	}
+
+	draw_Char(x, y, char, color, scale = 1) {
 		for (let i = 0; i < char.pointarray.length; i++) {
 			let row = char.pointarray[i]
 			for (let j = 0; j < row.length; j++) {
 				if (row[j]) {
 					this.draw_Pixel(x + j - char.shiftleft, y + i - char.shiftup, color)
+					// this.draw_Rect(Rect.XYWH(x, y, scale, scale), color)
 				}
 			}
 		}
-		return Rect.XYWH(x, y, char.width, char.height)
+		return Rect.XYWH(x, y, char.width * scale, char.height * scale)
 	}
 
 	draw_String(x, y, string, font, color = Color.COLOR('WHITE'), split = 1, lineheight = 0, border = 0, backgroundcolor = null) {
@@ -2008,7 +2917,11 @@ class Renderer {
 				return
 			}
 			let char = font.get(id)
-			this.draw_Char(x + border + lastx, y + lineheight + border, char, color)
+			if (rect.size.y === char.height) {
+				this.draw_Char(x + border + lastx, y + lineheight + border + char.shiftup, char, color)
+			}
+			else
+				this.draw_Char(x + border + lastx, y + lineheight + border, char, color)
 			lastx += char.width + split
 		})
 		return Rect.XYWH(x, y, rect.size.x + border * 2, rect.size.y + border * 2)
@@ -2297,4 +3210,3 @@ export class sunConsole {
 		sunConsole.GAMELOOP(this)
 	}
 }
-

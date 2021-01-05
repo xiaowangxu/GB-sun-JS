@@ -8,7 +8,6 @@
 
 <body>
 	<div id="container">
-
 	</div>
 </body>
 
@@ -70,80 +69,26 @@
 
 	class SpriteEditor {
 		constructor() {
-			this.colorpalettesprite = SUN.Sprite.COLOR_PALETTE_PICO()
-			this.colorpaletterects = []
-			this.colorpalettepos = new SUN.Vector2(4, 54)
-			this.size = 16
-			this.canvaspos = new SUN.Vector2(75, 42)
-			this.canvasrects = []
-			this.canvassize = 14
-			this.sprite = new SUN.Sprite([[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')],
-			[SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR(''), SUN.Color.COLOR('')]])
-			for (let i = 0; i < 4; i++) {
-				for (let j = 0; j < 4; j++) {
-					this.colorpaletterects.push({
-						id: i * 4 + j,
-						rect: SUN.Rect.XYWH(this.colorpalettepos.x + j * this.size, this.colorpalettepos.y + i * this.size, this.size, this.size)
-					})
-				}
-			}
-			for (let i = 0; i < 8; i++) {
-				for (let j = 0; j < 8; j++) {
-					this.canvasrects.push({
-						x: j,
-						y: i,
-						rect: SUN.Rect.XYWH(this.canvaspos.x + j * this.canvassize, this.canvaspos.y + i * this.canvassize, this.canvassize, this.canvassize)
-					})
-				}
-			}
-			this.currentcolorid = 0
+			this.topbar_color = SUN.Color.PICO(8)
+			this.background_color = SUN.Color.PICO(1)
+			this.font = SUN.Font.DEFAULT()
+		}
+
+		init(sc) {
+			let topbar_height = 12
+			this.topbar_rect = SUN.Rect.XYWH(0, 0, sc.Renderer.size.x, topbar_height)
+			this.background_rect = SUN.Rect.XYWH(0, topbar_height, sc.Renderer.size.x, sc.Renderer.size.y - topbar_height)
 		}
 
 		update(sc, delta) {
-			let mousepos = sc.Mouse.position
-			this.colorpaletterects.forEach((item) => {
-				if (item.rect.inside(mousepos)) {
-					if (sc.Mouse.keymap[0] !== undefined && sc.Mouse.keymap[0].once)
-						this.currentcolorid = item.id
-				}
-			})
-			this.canvasrects.forEach((item) => {
-				if (item.rect.inside(mousepos)) {
-					if (sc.Mouse.keymap[0] !== undefined) {
-						this.sprite.set_Pixel(item.x, item.y, SUN.Color.PICO(this.currentcolorid))
-					}
-					if (sc.Mouse.keymap[2] !== undefined) {
-						this.sprite.set_Pixel(item.x, item.y, SUN.Color.COLOR(''))
-					}
-				}
-			})
+
 		}
 
-		draw(sc, delta) {
-			sc.Renderer.clear(SUN.Color.PICO(1))
-			let size = sc.Renderer.size
-			// console.log(size)
-			sc.Renderer.draw_Rect(SUN.Rect.XYWH(0, 0, size.x, 13), SUN.Color.PICO(3))
-
-			sc.Renderer.draw_String(0, 0, 'SPRITE EDITOR', SUN.DEFAULT_FONT, SUN.Color.COLOR("WHITE"), true, SUN.Color.PICO(3), 1, 0, 3)
-			sc.Renderer.draw_String(2, 39, 'COLOR PALETTE', SUN.DEFAULT_FONT, SUN.Color.COLOR("WHITE"), true, SUN.Color.PICO(5), 1, 0, 2)
-			sc.Renderer.draw_String(2, 122, 'COLOR ID ' + this.currentcolorid, SUN.DEFAULT_FONT, SUN.Color.COLOR("WHITE"), true, SUN.Color.PICO(5), 1, 0, 2)
-
-			sc.Renderer.draw_Rect(SUN.Rect.XYWH(this.colorpalettepos.x - 2, this.colorpalettepos.y - 2, 4 * this.size + 4, 4 * this.size + 4), SUN.Color.PICO(5))
-
-			this.colorpaletterects.forEach((item) => {
-				sc.Renderer.draw_Rect(item.rect, SUN.Color.PICO(item.id))
-			})
-			sc.Renderer.draw_Rect(SUN.Rect.XYWH(72, 39, 118, 118), SUN.Color.PICO(5))
-			sc.Renderer.draw_Rect(SUN.Rect.XYWH(74, 41, 114, 114), SUN.Color.RGB8(150, 150, 150))
-			sc.Renderer.draw_Sprite(this.canvaspos.x, this.canvaspos.y, this.sprite, 14)
-
+		render(sc, delta) {
+			// sc.Renderer.clear()
+			sc.Renderer.draw_Rect(this.topbar_rect, this.topbar_color)
+			sc.Renderer.draw_String(2, 2, 'Sprite Editor', this.font)
+			sc.Renderer.draw_Rect(this.background_rect, this.background_color)
 		}
 	}
 
@@ -157,6 +102,12 @@
 			this.ins = []
 			this.idx = 0
 			this.backgroundcolor = SUN.Color.RGB8(20, 20, 20)
+			this.monkey = SUN.Mesh.LOAD_OBJ('untitled.obj')
+			this.camera = new SUN.Camera(new SUN.Vector3(0, 0, -2))
+		}
+
+		init() {
+
 		}
 
 		exec_Instruction(instruction, sc, delta) {
@@ -236,25 +187,25 @@
 				}
 			}
 			else if (ins === 'HELP') {
-				this.list.push(['◻◻ Instruction\t\t', { font: font, color: SUN.Color.PICO(12) }])
+				this.list.push(['◻◻ Instruction\t', { font: font, color: SUN.Color.PICO(12) }])
 				// this.list.push(['', { font: font, color: SUN.Color.PICO(12) }])
 				this.list.push([])
-				this.list.push(['◻◻ HELP\t\t\t\t\t', { font: font }])
+				this.list.push(['◻◻ HELP\t\t\t\t', { font: font }])
 				this.list.push(['show this info', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
 				this.list.push([])
-				this.list.push(['◻◻ REBOOT\t\t\t\t', { font: font }])
+				this.list.push(['◻◻ REBOOT\t\t\t', { font: font }])
 				this.list.push(['reboot the console', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
 				this.list.push([])
-				this.list.push(['◻◻ CLS\t\t\t\t\t\t', { font: font }])
+				this.list.push(['◻◻ CLS\t\t\t\t\t', { font: font }])
 				this.list.push(['clear screen', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
 				this.list.push([])
-				this.list.push(['◻◻ CHAR\t\t\t\t\t', { font: font }])
-				this.list.push(['log all useable characters', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
+				this.list.push(['◻◻ CHAR\t\t\t\t', { font: font }])
+				this.list.push(['log all useable chars', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
 				this.list.push([])
-				this.list.push(['◻◻ PALETTE\t\t\t', { font: font }])
+				this.list.push(['◻◻ PALETTE\t\t', { font: font }])
 				this.list.push(['log pico color palette', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
 				this.list.push([])
-				this.list.push(['◻◻ COLOR\t\t\t\t', { font: font }])
+				this.list.push(['◻◻ COLOR\t\t\t', { font: font }])
 				this.list.push(['log a specific color', { font: font, color: SUN.Color.RGB8(255, 255, 255, 50) }])
 				this.list.push([])
 			}
@@ -359,7 +310,7 @@
 
 		render(sc, delta) {
 			sc.Renderer.clear(this.backgroundcolor)
-			sc.Renderer.draw_Mesh(monkey, camera)
+			sc.Renderer.draw_Mesh(this.monkey, this.camera)
 
 			let cursor
 			if (this.time >= 0) {
@@ -483,33 +434,16 @@
 	// let spriteeditor = new SpriteEditor()
 	let sunconsole = new Console()
 
+	gameconsole.init = (sc) => {
+		sunconsole.init(sc)
+	}
+
 	gameconsole.action = (sc, delta) => {
 		sunconsole.update(sc, delta)
 	}
 
-
-	let sp = SUN.Sprite.COLOR_PALETTE_PICO()
-	let mesh = SUN.Mesh.CUBE(1)
-	let monkey = SUN.Mesh.LOAD_OBJ('./untitled.obj')
-	let camera = new SUN.Camera()
-	let camera2 = new SUN.Camera(new SUN.Vector3(1, 0, 0))
-
-
 	gameconsole.render = (sc, delta) => {
 		sunconsole.render(sc, delta)
-		// for (let i = 0; i < 1000; i++) {
-		// 	// sc.Renderer.draw_Sprite(Math.round(Math.random() * 256 + 30), Math.round(Math.random() * 256 + 30), sp)
-		// 	// let x0 = Math.round(Math.random() * 256)
-		// 	sc.Renderer.draw_Line(new SUN.Vector2(Math.round(Math.random() * 256), Math.round(Math.random() * 256)), new SUN.Vector2(Math.round(Math.random() * 256), Math.round(Math.random() * 256)), SUN.Color.RGB(Math.random(), Math.random(), Math.random()))
-
-		// }
-		// let rect = sc.Renderer.draw_Richtext(100, 100, [
-		// 	['Ha', { font: font, split: 1, lineheight: 0, linesplit: 1, border: 0 }], [],
-		// 	[SUN.Sprite.COLOR_PALETTE_PICO(), { scale: 1 }]
-		// ], 1, 0, 1)
-		// sc.Renderer.draw_Rect(rect, SUN.Color.RGB8(100, 0, 0, 80))
-		// sc.Renderer.draw_MultiString(100, 100, '123\nwshqk', font, SUN.Color.COLOR('white'), 1, 1, 0, 0, SUN.Color.RGB8(100, 0, 0),)
-		// for (let i = 0; i < 10; i++)
 	}
 
 	gameconsole.run()
