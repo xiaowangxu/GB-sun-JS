@@ -41,24 +41,8 @@
 	import * as SUN from './GBsun.js'
 
 	let gameconsole = new SUN.sunConsole(256, 256)
-
 	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
-
 	let font = SUN.Font.DEFAULT()
-
-	gameconsole.init = (sc) => {
-
-		// for (let i = 0; i < 4; i++) {
-		// 	for (let j = 0; j < 4; j++) {
-		// 		let id = i * 4 + j
-		// 		const SIZE = sc.Renderer.size.x / 4
-		// 		sc.Renderer.draw_Rect(SUN.Rect.XYWH(j * SIZE, i * SIZE, SIZE, SIZE), SUN.Color.PICO(id))
-		// 	}
-		// }
-		// sc.Renderer.draw_Char(50, 50, SUN.Char.DEFAULT('B'), SUN.Color.PICO(0))
-
-
-	}
 
 	class PixelIndicate {
 		constructor() {
@@ -182,7 +166,7 @@
 					this.list.push([])
 				}
 				else if (arg.length === 1) {
-					this.list.push([arg[0], { font: font }])
+					this.list.push(['◻◻ ', { font: font }], [arg[0], { font: font }])
 					this.list.push([])
 				}
 			}
@@ -238,8 +222,8 @@
 				let y1 = arg[3]
 
 			}
-			else if (ins === 'BUFFER') {
-				console.log(sc.Renderer.buffer)
+			else if (ins === 'CLEARBUFFER') {
+				this.draw_buffer.fill(SUN.Color.COLOR('red'))
 			}
 			else if (ins === 'REBOOT') {
 				this.list = [['◻◻ '], [], ['◻◻ GAMEBOY SUN JS'], ['   0.0.1', { color: SUN.Color.RGB8(255, 255, 255, 50) }], [],
@@ -350,6 +334,7 @@
 				sc.Renderer.draw_Richtext(5, sc.Renderer.size.y - 4 - rect.size.y, array, 1, 0, 4)
 			}
 			this.time += delta
+			// sc.Renderer.draw_Buffer(0, 0, this.draw_buffer)
 		}
 	}
 
