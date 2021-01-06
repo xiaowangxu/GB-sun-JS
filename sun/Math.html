@@ -9,9 +9,9 @@
 <body>
 	<div id="container">
 	</div>
-	<input type="range" min="-10" max="10" step="0.1" oninput="changeValue1(this.value)">
-	<input type="range" min="-10" max="10" step="0.1" oninput="changeValue2(this.value)">
-	<input type="range" min="-10" max="10" step="0.1" oninput="changeValue3(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue1(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue2(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue3(this.value)">
 </body>
 
 <style>
@@ -19,14 +19,14 @@
 		margin: 0px;
 		height: 100%;
 		width: 100%;
-		background-color: black;
+		background-color: rgb(255, 255, 255);
 	}
 
 	#container {
 		width: 100%;
 		/* height: 100%; */
 		/* padding: auto; */
-		background-color: rgb(0, 0, 0);
+		background-color: rgb(255, 255, 255);
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -45,19 +45,19 @@
 	import * as SUN from './GBsun.js'
 
 	window.changeValue1 = function (val) {
-		i1.set_Value(val)
-		o.get_Value()
+		i1.set_Value(val);
+		forward(ns);
 	}
 	window.changeValue2 = function (val) {
-		i2.set_Value(val)
-		o.get_Value()
+		i2.set_Value(val);
+		forward(ns);
 	}
 	window.changeValue3 = function (val) {
-		i3.set_Value(val)
-		o.get_Value()
+		i3.set_Value(val);
+		forward(ns);
 	}
 
-	let gameconsole = new SUN.sunConsole(480, 256, true)
+	let gameconsole = new SUN.sunConsole(600, 256, true)
 
 	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
 
@@ -84,6 +84,7 @@
 
 	const WHITE = SUN.Color.COLOR('white')
 	const HIGHLIGHT = SUN.Color.PICO(10)
+	const FUNCTION = SUN.Color.PICO(14)
 	const TESTCOLOR = SUN.Color.RGB8(255, 255, 0, 20)
 
 	class Formula {
@@ -185,7 +186,7 @@
 			let center = this.center.get_Size(scale)
 			size.x = center.x + 8
 			size.y = center.y + 2
-			// render.draw_Rect(SUN.Rect.XYWH(x, y, size.x, size.y), TESTCOLOR)
+			// render.draw_Rect(SUN.Rect.XYWH(x, y, size.x, size.y), SUN.Color.RGB8(255, 0, 0, 20))
 			this.center.draw(render, x + 4, y + 1, color, scale)
 			render.draw_Line_DDA(x, y + 2, x, y + size.y - 3, color)
 			render.draw_Line_DDA(x + size.x - 1, y + 2, x + size.x - 1, y + size.y - 3, color)
@@ -220,22 +221,24 @@
 
 		get_Size(scale = 1) {
 			let size = new SUN.Vector2(0, 0)
+			let maxaligny = 0
+			let start = 0
+			let end = 0
 			this.list.forEach((f) => {
 				let fsize = f.get_Size(scale)
-				size.y = Math.max(size.y, fsize.y)
+				let align = f.get_Align(scale)
+				if (align.y / 2 - fsize.y / 2 < start) {
+					start = align.y / 2 - fsize.y / 2
+				}
+				if (align.y / 2 + fsize.y / 2 > end) {
+					end = align.y / 2 + fsize.y / 2
+				}
 				size.x += fsize.x + this.split
 			})
 			if (this.list.length > 0) {
 				size.x -= this.split
 			}
-			// if (this.ypos === 1) {
-			// 	let maxaligny = 0
-			// 	this.list.forEach((f) => {
-			// 		let align = f.get_Align(scale)
-			// 		maxaligny = Math.min(maxaligny, align.y)
-			// 	})
-			// 	size.y += maxaligny / 2
-			// }
+			size.y = Math.round(end - start)
 			return size
 		}
 
@@ -254,20 +257,28 @@
 			x = Math.round(x)
 			y = Math.round(y)
 			let size = this.get_Size(scale)
-			if (this.ypos === 1) {
-				let maxaligny = 0
+			{
+				let start = 0
+				let end = 0
 				this.list.forEach((f) => {
+					let fsize = f.get_Size(scale)
 					let align = f.get_Align(scale)
-					maxaligny = Math.min(maxaligny, align.y)
+					if (align.y / 2 - fsize.y / 2 < start) {
+						start = align.y / 2 - fsize.y / 2
+					}
+					if (align.y / 2 + fsize.y / 2 > end) {
+						end = align.y / 2 + fsize.y / 2
+					}
+					size.x += fsize.x + this.split
 				})
-				y += Math.round(maxaligny / 2)
-				// render.draw_Rect(SUN.Rect.XYWH(x, y - Math.round(maxaligny / 2), size.x, size.y), TESTCOLOR)
+				y -= Math.round(start + size.y / 2)
+				// render.draw_Rect(SUN.Rect.XYWH(x, Math.round(y), size.x, size.y), TESTCOLOR)
 			}
 			let i = 0
 			this.list.forEach((f) => {
 				let fsize = f.get_Size(scale)
 				let align = f.get_Align(scale)
-				f.draw(render, x + i, (this.ypos === 0 ? y : ((this.ypos === 2) ? (y + size.y - fsize.y) : Math.round((y + (size.y - fsize.y) / 2))) - (this.ypos === 1 ? Math.round(align.y / 2) : 0)), color, scale)
+				f.draw(render, x + i, Math.round((y + (size.y - fsize.y) / 2 + align.y / 2)), color, scale)
 				i += this.split + fsize.x
 			})
 		}
@@ -327,7 +338,7 @@
 			let size = new SUN.Vector2()
 			let top = this.top.get_Size(scale)
 			let bottom = this.bottom.get_Size(scale)
-			size.y = top.y
+			size.y = -top.y + 1
 			return size
 		}
 
@@ -366,9 +377,11 @@
 
 	class NeuralLink {
 		constructor(a, b, w) {
+			this.uid = uid++;
 			this.from = a;
 			this.to = b;
 			this.w = w;
+			this.dW = 0;
 		}
 
 		get_Value() {
@@ -385,14 +398,15 @@
 		}
 	}
 
-	class Neuron {
-		constructor(name = undefined, layer = 0, bias = 0, activefunc = (x) => {
+	const SIGMOID = {
+		f: (x) => {
 			return 1 / (1 + Math.exp(-x));
-		}, activefuncFunc = (x) => {
-			// return new FM_List([
-			// 	new FM_Text('Sigmoid'),
-			// 	new FM_BRACE(x),
-			// ])
+		},
+		dF: (x) => {
+			let sigmoid = 1 / (1 + Math.exp(-x));
+			return sigmoid * (1 - sigmoid);
+		},
+		func: (x) => {
 			return new FM_DIV([
 				new FM_Text('1'),
 				new FM_List([
@@ -402,18 +416,62 @@
 						new FM_Text('e'),
 						new FM_List([new FM_Text('-'), new FM_BRACE(x)])
 					])
-				], 2)
+				])
 			])
-		}) {
+		}
+	}
+
+	const RELU = {
+		f: (x) => {
+			return Math.max(0, x);
+		},
+		dF: (x) => {
+			return x < 0 ? 0 : 1;
+		},
+		func: (x) => {
+			return new FM_List([
+				new FM_Text('max', FUNCTION),
+				new FM_BRACE(new FM_List([
+					new FM_Text('0,'),
+					x
+				]))
+			])
+		}
+	}
+
+	const TANH = {
+		f: (x) => {
+			return Math.tanh(x);
+		},
+		dF: (x) => {
+			let e = Math.exp(x);
+			let e1 = Math.exp(-x);
+			return (e - e1) / (e + e1);
+		},
+		func: (x) => {
+			return new FM_List([
+				new FM_Text('tanh', FUNCTION),
+				new FM_BRACE(x)
+			])
+		}
+	}
+
+	class Neuron {
+		constructor(name = undefined, layer = 0, bias = 1, activefunc = RELU.f, activefuncFunc = RELU.func, dActiveFunc = RELU.dF) {
 			this.uid = uid++;
 			this.name = name;
 			this.layer = layer;
 			this.activefunc = activefunc;
+			this.dActiveFunc = dActiveFunc;
 			this.b = bias;
 			this.activefuncFunc = activefuncFunc;
 			this.fromlist = [];
 			this.tolist = [];
 			this.value = 0;
+			this.pos = [0, 0];
+			this.forwarded = false;
+			this.loss = null;
+			this.dB = 0;
 		}
 
 		has_LinkTo(n) {
@@ -424,7 +482,7 @@
 			return false;
 		}
 
-		link(n, w = Math.random() * 20 - 10) {
+		link(n, w = Math.random() * 2 - 1) {
 			if (this.has_LinkTo(n)) return;
 			let l = new NeuralLink(this, n, w);
 			this.tolist.push(l);
@@ -432,7 +490,10 @@
 		}
 
 		get_Value() {
-			if (this.fromlist.length === 0) {
+			if (this.forwarded) return this.value;
+			// console.log(this.name, "calcu!!")
+			if (this.layer === 0) {
+				this.forwarded = true;
 				return this.value;
 			}
 			else {
@@ -440,7 +501,8 @@
 				this.fromlist.forEach((link) => {
 					val += link.get_Value();
 				})
-				return this.value = this.activefunc(val);
+				this.forwarded = true;
+				return this.value = this.activefunc(val) + this.b;
 			}
 		}
 
@@ -464,10 +526,222 @@
 		}
 	}
 
-	function draw_NN(x, y, j, i, r, render, ns) {
-		let layer = {};
+	function forward(ns, input = {}) {
+		ns.forEach((nl) => {
+			nl.forEach((n) => {
+				n.forwarded = false;
+			})
+		})
+		if (ns[0]) {
+			ns[0].forEach((n, i) => {
+				if (input[n.name]) {
+					n.set_Value(input[n.name])
+				}
+			})
+		}
+		let out = {}
+		ns[ns.length - 1].forEach((n) => {
+			out[n.name] = n.get_Value();
+		})
+		return out;
+	}
+
+	class Optimizer {
+		constructor() {
+
+		}
+
+		init(ns) {
+
+		}
+
+		next(ns) {
+
+		}
+	}
+
+	class GradientDescent extends Optimizer {
+		constructor(learning_rate = 0.001) {
+			super();
+			this.learning_rate = learning_rate;
+			// this.a = a;
+			// this.last = {};
+		}
+
+		next(ns) {
+			ns.forEach((nl) => {
+				nl.forEach((n) => {
+					n.b -= n.dB * this.learning_rate;
+					n.tolist.forEach((l) => {
+						l.w -= l.dW * this.learning_rate;
+					})
+				})
+			})
+		}
+	}
+
+	class Momentum extends Optimizer {
+		constructor(learning_rate = 0.001, a = 0.8) {
+			super();
+			this.learning_rate = learning_rate;
+			this.a = a;
+			this.last = {};
+		}
+
+		init(ns) {
+			ns.forEach((nl) => {
+				nl.forEach((n) => {
+					this.last[n.uid] = 0;
+					n.tolist.forEach((l) => {
+						this.last[l.uid] = 0;
+					})
+				})
+			})
+		}
+
+		next(ns) {
+			ns.forEach((nl) => {
+				nl.forEach((n) => {
+					let dB = this.last[n.uid] * this.a + n.dB * this.learning_rate;
+					n.b -= dB;
+					this.last[n.uid] = dB;
+					n.tolist.forEach((l) => {
+						let dW = this.last[l.uid] * this.a + l.dW * this.learning_rate;
+						l.w -= dW;
+						this.last[l.uid] = dW;
+					})
+				})
+			})
+		}
+	}
+
+
+	function backpropagation(ns, input = {}, wanted = {}, optimizer, loss, dloss) {
+		if (!optimizer) throw new Error('Optimizer is not defined');
+		// forward update the output // get output object
+		let out = forward(ns, input);
+
+		optimizer.init(ns);
+
+		ns.forEach((nl) => {
+			nl.forEach((n) => {
+				n.loss = null;
+				n.dB = 0;
+			})
+		})
+
+		if (!loss) {
+			// loss = (O1-A1)^2+(O2-A3)^2+...+(On-An)^2
+			loss = (out, wanted) => {
+				let l = 0;
+				for (let key in out) {
+					if (wanted[key] === undefined) throw new Error("no wanted val on " + key);
+					l += (out[key] - wanted[key]) ** 2;
+				}
+				return l;
+			}
+			dloss = (out_n, wanted_n) => {
+				return 2 * (out_n - wanted_n)
+			}
+		}
+
+		// output layer adjust
+		ns[ns.length - 1].forEach((n) => {
+			let val = n.get_Value();
+			let dLoss_N = dloss(n.get_Value(), wanted[n.name]);
+			// ActiveFunc(Out) = ActiveFunc(h*w+h*w+...+h*w+b)
+			let dN_B = n.dActiveFunc(val);
+			n.loss = dLoss_N;
+			n.dB = dLoss_N * dN_B;
+			// console.log(n.name, 'dB', n.dB);
+			n.fromlist.forEach((l) => {
+				let dN_W = n.dActiveFunc(val) * l.from.get_Value();
+				l.dW = dLoss_N * dN_W;
+				// console.log(l.from.name + "-" + l.to.name, 'dW', l.dW);
+			})
+
+			for (let i = ns.length - 2; i > 0; i--) {
+				let layer = ns[i];
+				layer.forEach((n) => {
+					let val = n.get_Value();
+					// dLoss_N1 N1 = ActiveFunc(N*W + ... + b)
+					let dLoss_N = 0;
+					n.tolist.forEach((l) => {
+						let dLoss_N1 = l.to.loss;
+						let dN1_N = l.to.dActiveFunc(l.to.get_Value()) * l.w;
+						// console.log(n.name, dN1_N)
+						dLoss_N += dLoss_N1 * dN1_N;
+					})
+					n.loss = dLoss_N;
+					let dN_B = n.dActiveFunc(val);
+					n.dB = dLoss_N * dN_B;
+					n.fromlist.forEach((l) => {
+						let dN_W = n.dActiveFunc(val) * l.from.get_Value();
+						l.dW = dLoss_N * dN_W;
+					})
+				})
+			}
+		})
+
+		// gradient descent
+		optimizer.next(ns);
+
+		return [out, loss(out, wanted)];
+	}
+
+	function draw_NN(x, y, j, i, r, render, ns, maxsize) {
 		x += r
 		y += r
+		maxsize = (maxsize) * j + 2 * r
+		let pos = {}
+		ns.forEach((nl, h) => {
+			let posx = x
+			let thissize = r * 2 + (nl.length - 1) * j
+			let posy = y + (maxsize - thissize) / 2
+			nl.forEach((n, k) => {
+				let tx = posx + h * j
+				let ty = posy + k * i
+				let str = (Math.round(n.value * 100) / 100).toString()
+				let rect = SUN.DEFAULT_FONT.get_StringRect(str)
+				// let radius = Math.max(r, Math.round((rect.size.x + 4) / 2))
+				let radius = r
+				// console.log(rect)
+				// console.log(radius)
+				render.draw_Circle(tx, ty, radius, WHITE)
+				render.draw_String(Math.round(tx - rect.size.x / 2), Math.round(ty - rect.size.y / 2), str, SUN.DEFAULT_FONT)
+				n.r = radius
+				n.pos = [tx, ty]
+			})
+		})
+		r++
+		ns.forEach((nl) => {
+			nl.forEach((n) => {
+				r = n.r
+				let name = n.name ? n.name : 'N' + n.uid
+				let rect2 = SUN.DEFAULT_FONT.get_StringRect(name)
+				render.draw_String(Math.round(n.pos[0] - rect2.size.x / 2), Math.round(n.pos[1] - r - rect2.size.y - 3), name, SUN.DEFAULT_FONT, HIGHLIGHT)
+				if (n.layer !== 0) {
+					name = (Math.round(n.b * 100) / 100).toString()
+					rect2 = SUN.DEFAULT_FONT.get_StringRect(name)
+					render.draw_String(Math.round(n.pos[0] - rect2.size.x / 2), Math.round(n.pos[1] + r + 3), name, SUN.DEFAULT_FONT)
+				}
+				n.tolist.forEach((l) => {
+					let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, l.w), 0, 1)
+					let color = SUN.Color.RGB(1 - percent, percent, 0)
+					let dir = (new SUN.Vector2(l.to.pos[0] - l.from.pos[0], l.to.pos[1] - l.from.pos[1])).normalize()
+					render.draw_Line_DDA(l.from.pos[0] + dir.x * r, l.from.pos[1] + dir.y * r, l.to.pos[0] - dir.x * r, l.to.pos[1] - dir.y * r, color)
+					let str = (Math.round(l.w * 100) / 100).toString()
+					let rect = SUN.DEFAULT_FONT.get_StringRect(str)
+					let tx = (l.from.pos[0] + dir.x * r) * 2 + (l.to.pos[0] - dir.x * r)
+					let ty = (l.from.pos[1] + dir.x * r) * 2 + (l.to.pos[1] - dir.x * r)
+					render.draw_String(Math.round(tx / 3 - rect.size.x / 2), Math.round(ty / 3 - rect.size.y / 2), str, SUN.DEFAULT_FONT)
+				})
+			})
+		})
+	}
+
+	function get_NN(ns) {
+		let layer = {};
 		ns.forEach((n) => {
 			if (layer[n.layer]) {
 				layer[n.layer].push(n)
@@ -478,88 +752,144 @@
 		let layerarr = [];
 		let maxsize = 0;
 		for (let key in layer) {
-			maxsize = Math.max(maxsize, r * 2 + (layer[key].length - 1) * j)
+			maxsize = Math.max(maxsize, (layer[key].length - 1))
 			layerarr.push(layer[key])
 		}
-		// console.log(layerarr)
 		layerarr.sort((a, b) => {
 			return a[0].layer > b[0].layer ? 1 : 0
 		})
-		// console.log(layerarr)
-		let pos = {}
-		layerarr.forEach((nl, h) => {
-			let posx = x
-			let thissize = r * 2 + (nl.length - 1) * j
-			let posy = y + (maxsize - thissize) / 2
-			nl.forEach((n, k) => {
-				let tx = posx + h * j
-				let ty = posy + k * i
-				let str = (Math.round(n.value * 100) / 100).toString()
-				let rect = SUN.DEFAULT_FONT.get_StringRect(str)
-
-				// console.log(rect)
-				render.draw_Circle(tx, ty, r, WHITE)
-				render.draw_String(Math.round(tx - rect.size.x / 2), Math.round(ty - rect.size.y / 2), str, SUN.DEFAULT_FONT)
-
-				n.pos = [tx, ty]
-			})
-		})
-		r++
-		ns.forEach((n) => {
-			let name = n.name ? n.name : 'N' + n.uid
-			let rect2 = SUN.DEFAULT_FONT.get_StringRect(name)
-			render.draw_String(Math.round(n.pos[0] - rect2.size.x / 2), Math.round(n.pos[1] - r - rect2.size.y - 3), name, SUN.DEFAULT_FONT, HIGHLIGHT)
-			n.tolist.forEach((l) => {
-				let percent = SUN.Fn.clamp(SUN.Fn.percent(-10, 10, l.w), 0, 1)
-				let color = SUN.Color.RGB(percent, 1 - percent, 0)
-				let dir = (new SUN.Vector2(l.to.pos[0] - l.from.pos[0], l.to.pos[1] - l.from.pos[1])).normalize()
-				render.draw_Line_DDA(l.from.pos[0] + dir.x * r, l.from.pos[1] + dir.y * r, l.to.pos[0] - dir.x * r, l.to.pos[1] - dir.y * r, color)
-			})
-		})
+		return [layerarr, maxsize]
 	}
+
+	// let i1 = new Neuron('I1', 0);
+	// let i2 = new Neuron('I2', 0);
+	// let i3 = new Neuron('I3', 0);
+	// let h1 = new Neuron('H2,1', 1);
+	// let h2 = new Neuron('H2,2', 1);
+	// let h3 = new Neuron('H3,1', 2);
+	// let h4 = new Neuron('H3,2', 2);
+	// let o = new Neuron('Out', 3);
+	// let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o]);
+
+	// i1.link(h1);
+	// i1.link(h2);
+	// i2.link(h1);
+	// i2.link(h2);
+	// i3.link(h1);
+	// i3.link(h2);
+	// h1.link(h3);
+	// h1.link(h4);
+	// h2.link(h3);
+	// h2.link(h4);
+	// h3.link(o);
+	// h4.link(o);
 
 	let i1 = new Neuron('I1', 0);
 	let i2 = new Neuron('I2', 0);
 	let i3 = new Neuron('I3', 0);
-	let h1 = new Neuron('H2,1', 1);
-	let h2 = new Neuron('H2,2', 1);
-	let h3 = new Neuron('H3,1', 2);
-	let h4 = new Neuron('H3,2', 2);
-	let o = new Neuron('Out', 3);
-	let ns = [i1, i2, i3, h1, h2, h3, h4, o];
+	let h1 = new Neuron('H1', 1);
+	let h2 = new Neuron('H2', 1);
+	let h3 = new Neuron('H3', 2);
+	let h4 = new Neuron('H4', 2);
+	let o1 = new Neuron('Out1', 3);
+	let o2 = new Neuron('Out2', 3);
+	let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o1, o2]);
+	let gd = new Momentum(0.0001, 0);
 
-	i1.link(h1);
-	i1.link(h2);
-	i2.link(h1);
-	i2.link(h2);
-	i3.link(h1);
-	i3.link(h2);
-	h1.link(h3);
-	h1.link(h4);
-	h2.link(h3);
-	h2.link(h4);
-	h3.link(o);
-	h4.link(o);
-	i1.set_Value(3);
-	i2.set_Value(5);
+	i1.link(h1, 0.5);
+	i1.link(h2, -0.5);
+	i2.link(h1, 0.5);
+	i2.link(h2, - 0.5);
+	i3.link(h1, 0.5);
+	i3.link(h2, -0.5);
+	h1.link(h3, 0.5);
+	h1.link(h4, -0.5);
+	h2.link(h3, 0.5);
+	h2.link(h4, -0.5);
+	h3.link(o1, 0.5);
+	h4.link(o1, -0.5);
+	h3.link(o2, 0.5);
+	h4.link(o2, -0.5);
 
-	console.log(o)
+	let i21 = new Neuron('I1', 0);
+	let i22 = new Neuron('I2', 0);
+	let i23 = new Neuron('I3', 0);
+	let h21 = new Neuron('H1', 1);
+	let h22 = new Neuron('H2', 1);
+	let h23 = new Neuron('H3', 2);
+	let h24 = new Neuron('H4', 2);
+	let o21 = new Neuron('Out1', 3);
+	let o22 = new Neuron('Out2', 3);
+	let [ns2, maxsize2] = get_NN([i21, i22, i23, h21, h22, h23, h24, o21, o22]);
+	let gd2 = new Momentum(0.00001, 0);
 
-	console.log(o.get_Value())
-	test = o.get_Function(true)
+	i21.link(h21, 0.5);
+	i21.link(h22, -0.5);
+	i22.link(h21, 0.5);
+	i22.link(h22, - 0.5);
+	i23.link(h21, 0.5);
+	i23.link(h22, -0.5);
+	h21.link(h23, 0.5);
+	h21.link(h24, -0.5);
+	h22.link(h23, 0.5);
+	h22.link(h24, -0.5);
+	h23.link(o21, 0.5);
+	h24.link(o21, -0.5);
+	h23.link(o22, 0.5);
+	h24.link(o22, -0.5);
 
-	console.log(test)
+	// test = o1.get_Function(true)
 
 
 	gameconsole.init = (sc) => {
 	}
 
 	gameconsole.action = (sc, delta) => {
+		if (sc.Keyboard.keymap[' '] && sc.Keyboard.keymap[' '].once) {
+			train = !train
+		}
 	}
 
+	let train = false
+	let lossarr1 = [];
+	let lossarr2 = [];
 	gameconsole.render = (sc, delta) => {
-		test.draw(sc.Renderer, 5, 10, WHITE, 1)
-		draw_NN(60, 60, 60, 60, 11, sc.Renderer, ns)
+		// test.draw(sc.Renderer, 5, 10, WHITE, 1)
+		let loss1
+		let loss2
+		if (train) {
+			for (let i = 0; i < 100; i++) {
+				let a = Math.random() * 10
+				let b = Math.random() * 10
+				let c = Math.random() * 10
+				let out = (a + b + c) / 3
+				let [ans, l] = backpropagation(ns, { I1: a, I2: b, I3: c }, { Out1: out, Out2: (a + b + c) }, gd)
+				loss1 = l
+				let [ans2, l2] = backpropagation(ns2, { I1: a, I2: b, I3: c }, { Out1: out, Out2: (a + b + c) }, gd2)
+				loss2 = l2
+
+			}
+			// console.log(loss)
+			lossarr1.push(SUN.Fn.clamp(loss1 * 500, 0, 50))
+			lossarr2.push(SUN.Fn.clamp(loss2 * 500, 0, 50))
+		}
+		draw_NN(40, 20, 70, 70, 13, sc.Renderer, ns, maxsize)
+		draw_NN(320, 20, 70, 70, 13, sc.Renderer, ns2, maxsize2)
+		let len = lossarr1.length
+		let w = sc.Renderer.size.x
+		for (let i = 1; i < len; i++) {
+			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 250 - lossarr1[i - 1], (i) * w / len, 250 - lossarr1[i], SUN.Color.PICO(8))
+		}
+		if (lossarr1.length > 300) {
+			lossarr1.shift();
+		}
+		len = lossarr2.length
+		for (let i = 1; i < len; i++) {
+			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 250 - lossarr2[i - 1], (i) * w / len, 250 - lossarr2[i], SUN.Color.PICO(12))
+		}
+		if (lossarr2.length > 300) {
+			lossarr2.shift();
+		}
 	}
 
 	gameconsole.run()
