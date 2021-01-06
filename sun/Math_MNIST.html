@@ -3,15 +3,15 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>GB sun JS</title>
+	<title>MNIST</title>
 </head>
 
 <body>
 	<div id="container">
 	</div>
-	<input type="range" min="0" max="10" step="0.1" oninput="changeValue1(this.value)">
+	<!-- <input type="range" min="0" max="10" step="0.1" oninput="changeValue1(this.value)">
 	<input type="range" min="0" max="10" step="0.1" oninput="changeValue2(this.value)">
-	<input type="range" min="0" max="10" step="0.1" oninput="changeValue3(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue3(this.value)"> -->
 </body>
 
 <style>
@@ -24,8 +24,8 @@
 
 	#container {
 		width: 100%;
-		/* height: 100%; */
-		/* padding: auto; */
+		height: 100%;
+		padding: auto;
 		background-color: rgb(255, 255, 255);
 		display: flex;
 		flex-direction: column;
@@ -44,20 +44,7 @@
 <script type="module">
 	import * as SUN from './GBsun.js'
 
-	window.changeValue1 = function (val) {
-		i1.set_Value(val);
-		forward(ns);
-	}
-	window.changeValue2 = function (val) {
-		i2.set_Value(val);
-		forward(ns);
-	}
-	window.changeValue3 = function (val) {
-		i3.set_Value(val);
-		forward(ns);
-	}
-
-	let gameconsole = new SUN.sunConsole(600, 256, true)
+	let gameconsole = new SUN.sunConsole(500, 500, true)
 
 	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
 
@@ -356,23 +343,6 @@
 		}
 	}
 
-	// let test = new FM_List([new FM_Text("F"), new FM_BRACE(new FM_Text('x')), new FM_Text('='), new FM_POW([new FM_List([new FM_Text('sin'), new FM_BRACE(new FM_Text('x'))]), new FM_Text('2')])])
-	let test
-
-	// let test = new FM_List([
-	// 	new FM_POW([new FM_Text('w'), new FM_Text('1')]),
-	// 	new FM_POW([new FM_Text('x'), new FM_Text('1')]),
-	// 	new FM_Text('+'),
-	// 	new FM_Text('w'),
-	// 	new FM_Text('.'),
-	// 	new FM_Text('x'),
-	// 	new FM_Text('+'),
-	// 	new FM_Text('w'),
-	// 	new FM_Text('.'),
-	// 	new FM_Text('x'),
-	// 	new FM_Text('+'),
-	// 	new FM_Text('b')
-	// ])
 	let uid = 0;
 
 	class NeuralLink {
@@ -759,103 +729,36 @@
 		return [layerarr, maxsize]
 	}
 
-	// let i1 = new Neuron('I1', 0);
-	// let i2 = new Neuron('I2', 0);
-	// let i3 = new Neuron('I3', 0);
-	// let h1 = new Neuron('H2,1', 1);
-	// let h2 = new Neuron('H2,2', 1);
-	// let h3 = new Neuron('H3,1', 2);
-	// let h4 = new Neuron('H3,2', 2);
-	// let o = new Neuron('Out', 3);
-	// let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o]);
 
-	// i1.link(h1);
-	// i1.link(h2);
-	// i2.link(h1);
-	// i2.link(h2);
-	// i3.link(h1);
-	// i3.link(h2);
-	// h1.link(h3);
-	// h1.link(h4);
-	// h2.link(h3);
-	// h2.link(h4);
-	// h3.link(o);
-	// h4.link(o);
+	// out
+	let o1 = new Neuron('Out1', 2);
+	// let o2 = new Neuron('Out2', 3);
+	let nodes = [o1];
+	let outs = [o1];
+	let h2s = [];
 
+	for (let i = 1; i <= 4; i++) {
+		let h = new Neuron('I' + i, 0);
+		h2s.push(h);
+		nodes.push(h);
+		outs.forEach((o) => {
+			h.link(o, 0.5);
+		})
+	}
 
-	let i1 = new Neuron('I1', 0);
-	let i2 = new Neuron('I2', 0);
-	let i3 = new Neuron('I3', 0);
-	let h1 = new Neuron('H1', 1);
-	let h2 = new Neuron('H2', 1);
-	let h3 = new Neuron('H3', 2);
-	let h4 = new Neuron('H4', 2);
-	let o1 = new Neuron('Out1', 3);
-	let o2 = new Neuron('Out2', 3);
-	let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o1, o2]);
+	// let h1s = []
+
+	// for (let i = 1; i <= 4; i++) {
+	// 	let h = new Neuron('I' + i, 0);
+	// 	h1s.push(h);
+	// 	nodes.push(h);
+	// 	h2s.forEach((o) => {
+	// 		h.link(o, 0.5);
+	// 	})
+	// }
+
+	let [ns, maxsize] = get_NN(nodes);
 	let gd = new Momentum(0.0001, 0);
-
-	let w1 = Math.random() * 2 - 1
-	let w2 = Math.random() * 2 - 1
-	let w3 = Math.random() * 2 - 1
-	let w4 = Math.random() * 2 - 1
-	let w5 = Math.random() * 2 - 1
-	let w6 = Math.random() * 2 - 1
-	let w7 = Math.random() * 2 - 1
-	let w8 = Math.random() * 2 - 1
-	let w9 = Math.random() * 2 - 1
-	let w10 = Math.random() * 2 - 1
-	let w11 = Math.random() * 2 - 1
-	let w12 = Math.random() * 2 - 1
-	let w13 = Math.random() * 2 - 1
-	let w14 = Math.random() * 2 - 1
-
-
-	i1.link(h1, w1);
-	i1.link(h2, w2);
-	i2.link(h1, w3);
-	i2.link(h2, w4);
-	i3.link(h1, w5);
-	i3.link(h2, w6);
-	h1.link(h3, w7);
-	h1.link(h4, w8);
-	h2.link(h3, w9);
-	h2.link(h4, w10);
-	h3.link(o1, w11);
-	h4.link(o1, w12);
-	h3.link(o2, w13);
-	h4.link(o2, w14);
-
-	let i21 = new Neuron('I1', 0);
-	let i22 = new Neuron('I2', 0);
-	let i23 = new Neuron('I3', 0);
-	let h21 = new Neuron('H1', 1);
-	let h22 = new Neuron('H2', 1);
-	let h23 = new Neuron('H3', 2);
-	let h24 = new Neuron('H4', 2);
-	let o21 = new Neuron('Out1', 3);
-	let o22 = new Neuron('Out2', 3);
-	let [ns2, maxsize2] = get_NN([i21, i22, i23, h21, h22, h23, h24, o21, o22]);
-	let gd2 = new Momentum(0.00001, 0);
-
-	i21.link(h21, w1);
-	i21.link(h22, w2);
-	i22.link(h21, w3);
-	i22.link(h22, w4);
-	i23.link(h21, w5);
-	// i23.link(o22, w5);
-	i23.link(h22, w6);
-	h21.link(h23, w7);
-	h21.link(h24, w8);
-	h22.link(h23, w9);
-	h22.link(h24, w10);
-	h23.link(o21, w11);
-	h24.link(o21, w12);
-	h23.link(o22, w13);
-	h24.link(o22, w14);
-
-	// test = o1.get_Function(true)
-
 
 	gameconsole.init = (sc) => {
 	}
@@ -868,43 +771,30 @@
 
 	let train = false
 	let lossarr1 = [];
-	let lossarr2 = [];
 	gameconsole.render = (sc, delta) => {
 		// test.draw(sc.Renderer, 5, 10, WHITE, 1)
 		let loss1
-		let loss2
 		if (train) {
-			for (let i = 0; i < 100; i++) {
-				let a = Math.random() * 10
-				let b = Math.random() * 10
-				let c = Math.random() * 10
-				let out = (a + b + c) / 3
-				let [ans, l] = backpropagation(ns, { I1: a, I2: b, I3: c }, { Out1: out, Out2: (a + b + c) }, gd)
+			for (let i = 0; i < 500; i++) {
+				let a = (Math.random() > 0.5) ? 1 : 0
+				let b = (Math.random() > 0.5) ? 1 : 0
+				let c = (Math.random() > 0.5) ? 1 : 0
+				let d = (Math.random() > 0.5) ? 1 : 0
+				let out = a * 1 + b * 2 + c * 4 + d * 8
+				let [ans, l] = backpropagation(ns, { I1: a, I2: b, I3: c, I4: d }, { Out1: out }, gd)
 				loss1 = l
-				let [ans2, l2] = backpropagation(ns2, { I1: a, I2: b, I3: c }, { Out1: out, Out2: (a + b + c) }, gd2)
-				loss2 = l2
-
 			}
 			// console.log(loss)
 			lossarr1.push(SUN.Fn.clamp(loss1 * 500, 0, 50))
-			lossarr2.push(SUN.Fn.clamp(loss2 * 500, 0, 50))
 		}
-		draw_NN(40, 20, 70, 70, 13, sc.Renderer, ns, maxsize)
-		draw_NN(320, 20, 70, 70, 13, sc.Renderer, ns2, maxsize2)
+		draw_NN(40, 20, 100, 100, 13, sc.Renderer, ns, maxsize)
 		let len = lossarr1.length
 		let w = sc.Renderer.size.x
 		for (let i = 1; i < len; i++) {
-			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 250 - lossarr1[i - 1], (i) * w / len, 250 - lossarr1[i], SUN.Color.PICO(8))
+			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 480 - lossarr1[i - 1], (i) * w / len, 480 - lossarr1[i], SUN.Color.PICO(8))
 		}
 		if (lossarr1.length > 300) {
 			lossarr1.shift();
-		}
-		len = lossarr2.length
-		for (let i = 1; i < len; i++) {
-			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 250 - lossarr2[i - 1], (i) * w / len, 250 - lossarr2[i], SUN.Color.PICO(12))
-		}
-		if (lossarr2.length > 300) {
-			lossarr2.shift();
 		}
 	}
 
