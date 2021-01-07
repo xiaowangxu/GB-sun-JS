@@ -457,14 +457,14 @@
 	}
 
 	class Neuron {
-		constructor(name = undefined, layer = 0, bias = 1, activefunc = RELU.f, activefuncFunc = RELU.func, dActiveFunc = RELU.dF) {
+		constructor(name = undefined, layer = 0, activefunc = RELU, bias = 1) {
 			this.uid = uid++;
 			this.name = name;
 			this.layer = layer;
-			this.activefunc = activefunc;
-			this.dActiveFunc = dActiveFunc;
+			this.activefunc = activefunc.f;
+			this.dActiveFunc = activefunc.dF;
 			this.b = bias;
-			this.activefuncFunc = activefuncFunc;
+			this.activefuncFunc = activefunc.func;
 			this.fromlist = [];
 			this.tolist = [];
 			this.value = 0;
@@ -597,12 +597,15 @@
 					})
 				})
 			})
+			console.log(this)
 		}
 
 		next(ns) {
 			ns.forEach((nl) => {
 				nl.forEach((n) => {
+					// console.log(n.dB)
 					let dB = this.last[n.uid] * this.a + n.dB * this.learning_rate;
+					// console.log(this.last[n.uid], this.a, n.dB, this.learning_rate)
 					n.b -= dB;
 					this.last[n.uid] = dB;
 					n.tolist.forEach((l) => {
@@ -621,10 +624,8 @@
 
 		let out = forward(ns, input);
 
-		optimizer.init(ns);
-
 		if (!loss) {
-			// loss = (O1-A1)^2+(O2-A3)^2+...+(On-An)^2
+			// loss = (O1-A1)^2+(O2-A2)^2+...+(On-An)^2
 			loss = (out, wanted) => {
 				let l = 0;
 				for (let key in out) {
@@ -646,7 +647,6 @@
 			let dN_B = n.dActiveFunc(val);
 			n.loss = dLoss_N;
 			n.dB = dLoss_N * dN_B;
-			// console.log(n.name, 'dB', n.dB);
 			n.fromlist.forEach((l) => {
 				let dN_W = n.dActiveFunc(val) * l.from.get_Value();
 				l.dW = dLoss_N * dN_W;
@@ -759,30 +759,6 @@
 		return [layerarr, maxsize]
 	}
 
-	// let i1 = new Neuron('I1', 0);
-	// let i2 = new Neuron('I2', 0);
-	// let i3 = new Neuron('I3', 0);
-	// let h1 = new Neuron('H2,1', 1);
-	// let h2 = new Neuron('H2,2', 1);
-	// let h3 = new Neuron('H3,1', 2);
-	// let h4 = new Neuron('H3,2', 2);
-	// let o = new Neuron('Out', 3);
-	// let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o]);
-
-	// i1.link(h1);
-	// i1.link(h2);
-	// i2.link(h1);
-	// i2.link(h2);
-	// i3.link(h1);
-	// i3.link(h2);
-	// h1.link(h3);
-	// h1.link(h4);
-	// h2.link(h3);
-	// h2.link(h4);
-	// h3.link(o);
-	// h4.link(o);
-
-
 	let i1 = new Neuron('I1', 0);
 	let i2 = new Neuron('I2', 0);
 	let i3 = new Neuron('I3', 0);
@@ -793,23 +769,22 @@
 	let o1 = new Neuron('Out1', 3);
 	let o2 = new Neuron('Out2', 3);
 	let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o1, o2]);
-	let gd = new Momentum(0.0001, 0);
+	let gd = new Momentum(0.0001, 0.5);
 
-	let w1 = Math.random() * 2 - 1
-	let w2 = Math.random() * 2 - 1
-	let w3 = Math.random() * 2 - 1
-	let w4 = Math.random() * 2 - 1
-	let w5 = Math.random() * 2 - 1
-	let w6 = Math.random() * 2 - 1
-	let w7 = Math.random() * 2 - 1
-	let w8 = Math.random() * 2 - 1
-	let w9 = Math.random() * 2 - 1
-	let w10 = Math.random() * 2 - 1
-	let w11 = Math.random() * 2 - 1
-	let w12 = Math.random() * 2 - 1
-	let w13 = Math.random() * 2 - 1
-	let w14 = Math.random() * 2 - 1
-
+	let w1 = 0.5;
+	let w2 = - 0.5;
+	let w3 = 0.5;
+	let w4 = - 0.5;
+	let w5 = 0.5;
+	let w6 = - 0.5;
+	let w7 = 0.5;
+	let w8 = - 0.5;
+	let w9 = 0.5;
+	let w10 = - 0.5;
+	let w11 = 0.5;
+	let w12 = - 0.5;
+	let w13 = 0.5;
+	let w14 = -0.5;
 
 	i1.link(h1, w1);
 	i1.link(h2, w2);
@@ -825,6 +800,7 @@
 	h4.link(o1, w12);
 	h3.link(o2, w13);
 	h4.link(o2, w14);
+	gd.init(ns);
 
 	let i21 = new Neuron('I1', 0);
 	let i22 = new Neuron('I2', 0);
@@ -836,14 +812,13 @@
 	let o21 = new Neuron('Out1', 3);
 	let o22 = new Neuron('Out2', 3);
 	let [ns2, maxsize2] = get_NN([i21, i22, i23, h21, h22, h23, h24, o21, o22]);
-	let gd2 = new Momentum(0.00001, 0);
+	let gd2 = new GradientDescent(0.0001);
 
 	i21.link(h21, w1);
 	i21.link(h22, w2);
 	i22.link(h21, w3);
 	i22.link(h22, w4);
 	i23.link(h21, w5);
-	// i23.link(o22, w5);
 	i23.link(h22, w6);
 	h21.link(h23, w7);
 	h21.link(h24, w8);
@@ -853,9 +828,7 @@
 	h24.link(o21, w12);
 	h23.link(o22, w13);
 	h24.link(o22, w14);
-
-	// test = o1.get_Function(true)
-
+	gd2.init(ns2);
 
 	gameconsole.init = (sc) => {
 	}
@@ -874,7 +847,7 @@
 		let loss1
 		let loss2
 		if (train) {
-			for (let i = 0; i < 100; i++) {
+			for (let i = 0; i < 1000; i++) {
 				let a = Math.random() * 10
 				let b = Math.random() * 10
 				let c = Math.random() * 10
@@ -883,7 +856,6 @@
 				loss1 = l
 				let [ans2, l2] = backpropagation(ns2, { I1: a, I2: b, I3: c }, { Out1: out, Out2: (a + b + c) }, gd2)
 				loss2 = l2
-
 			}
 			// console.log(loss)
 			lossarr1.push(SUN.Fn.clamp(loss1 * 500, 0, 50))
