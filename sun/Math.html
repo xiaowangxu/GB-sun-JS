@@ -46,15 +46,21 @@
 
 	window.changeValue1 = function (val) {
 		i1.set_Value(val);
+		i21.set_Value(val);
 		forward(ns);
+		forward(ns2);
 	}
 	window.changeValue2 = function (val) {
 		i2.set_Value(val);
+		i22.set_Value(val);
 		forward(ns);
+		forward(ns2);
 	}
 	window.changeValue3 = function (val) {
 		i3.set_Value(val);
+		i23.set_Value(val);
 		forward(ns);
+		forward(ns2);
 	}
 
 	let gameconsole = new SUN.sunConsole(600, 256, true)
@@ -502,7 +508,7 @@
 					val += link.get_Value();
 				})
 				this.forwarded = true;
-				return this.value = this.activefunc(val) + this.b;
+				return this.value = this.activefunc(val + this.b);
 			}
 		}
 
@@ -769,7 +775,7 @@
 	let o1 = new Neuron('Out1', 3);
 	let o2 = new Neuron('Out2', 3);
 	let [ns, maxsize] = get_NN([i1, i2, i3, h1, h2, h3, h4, o1, o2]);
-	let gd = new Momentum(0.0001, 0.5);
+	let gd = new Momentum(0.0001, 0.8);
 
 	let w1 = 0.5;
 	let w2 = - 0.5;
@@ -847,7 +853,7 @@
 		let loss1
 		let loss2
 		if (train) {
-			for (let i = 0; i < 1000; i++) {
+			for (let i = 0; i < 100; i++) {
 				let a = Math.random() * 10
 				let b = Math.random() * 10
 				let c = Math.random() * 10
@@ -865,15 +871,19 @@
 		draw_NN(320, 20, 70, 70, 13, sc.Renderer, ns2, maxsize2)
 		let len = lossarr1.length
 		let w = sc.Renderer.size.x
+		sc.Renderer.draw_Line_DDA(0, 200, w, 200, TESTCOLOR)
+		sc.Renderer.draw_String(4, 204, 'loss >= 0.1', Font, TESTCOLOR)
+		sc.Renderer.draw_Line_DDA(0, 250, w, 250, TESTCOLOR)
+		sc.Renderer.draw_String(4, 240, 'loss = 0', Font, TESTCOLOR)
 		for (let i = 1; i < len; i++) {
-			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 250 - lossarr1[i - 1], (i) * w / len, 250 - lossarr1[i], SUN.Color.PICO(8))
+			sc.Renderer.draw_Line_DDA((i - 1) * w / (len - 1), 250 - lossarr1[i - 1], (i) * w / (len - 1), 250 - lossarr1[i], SUN.Color.PICO(8))
 		}
 		if (lossarr1.length > 300) {
 			lossarr1.shift();
 		}
 		len = lossarr2.length
 		for (let i = 1; i < len; i++) {
-			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 250 - lossarr2[i - 1], (i) * w / len, 250 - lossarr2[i], SUN.Color.PICO(12))
+			sc.Renderer.draw_Line_DDA((i - 1) * w / (len - 1), 250 - lossarr2[i - 1], (i) * w / (len - 1), 250 - lossarr2[i], SUN.Color.PICO(12))
 		}
 		if (lossarr2.length > 300) {
 			lossarr2.shift();

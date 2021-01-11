@@ -279,12 +279,13 @@ export class FM_POW extends Formula {
 let uid = 0;
 
 export class NeuralLink {
-	constructor(a, b, w) {
+	constructor(a, b, w, draw = true) {
 		this.uid = uid++;
 		this.from = a;
 		this.to = b;
 		this.w = w;
 		this.dW = 0;
+		this.draw = draw;
 	}
 
 	get_Value() {
@@ -393,9 +394,9 @@ export class Neuron {
 		return false;
 	}
 
-	link(n, w = Math.random() * 2 - 1) {
+	link(n, w = Math.random() * 2 - 1, draw) {
 		if (this.has_LinkTo(n)) return;
-		let l = new NeuralLink(this, n, w);
+		let l = new NeuralLink(this, n, w, draw);
 		this.tolist.push(l);
 		n.fromlist.push(l);
 	}
@@ -413,7 +414,7 @@ export class Neuron {
 				val += link.get_Value();
 			})
 			this.forwarded = true;
-			return this.value = this.activefunc(val) + this.b;
+			return this.value = this.activefunc(val + this.b);
 		}
 	}
 
@@ -434,6 +435,16 @@ export class Neuron {
 
 	set_Value(val) {
 		this.value = val;
+	}
+}
+
+export class MoreNeuron {
+	constructor(text = ".", layer) {
+		this.value = text;
+		this.uid = uid++;
+		this.name = text;
+		this.layer = layer;
+		this.tolist = [];
 	}
 }
 
@@ -508,7 +519,7 @@ export class Momentum extends Optimizer {
 				})
 			})
 		})
-		console.log(this)
+		// console.log(this)
 	}
 
 	next(ns) {
@@ -605,13 +616,15 @@ export function draw_NN(x, y, j, i, r, render, ns, maxsize, title = true, b = tr
 		nl.forEach((n, k) => {
 			let tx = posx + h * j
 			let ty = posy + k * i
-			let str = (Math.round(n.value * 100) / 100).toString()
+
+			let str = (n instanceof Neuron) ? (Math.round(n.value * 100) / 100).toString() : n.value;
 			let rect = SUN.DEFAULT_FONT.get_StringRect(str)
 			// let radius = Math.max(r, Math.round((rect.size.x + 4) / 2))
 			let radius = r
 			// console.log(rect)
 			// console.log(radius)
-			render.draw_Circle(tx, ty, radius, WHITE)
+			if (n instanceof Neuron)
+				render.draw_Circle(tx, ty, radius, WHITE)
 			render.draw_String(Math.round(tx - rect.size.x / 2), Math.round(ty - rect.size.y / 2), str, SUN.DEFAULT_FONT)
 			n.r = radius
 			n.pos = [tx, ty]
@@ -620,19 +633,21 @@ export function draw_NN(x, y, j, i, r, render, ns, maxsize, title = true, b = tr
 	r++
 	ns.forEach((nl) => {
 		nl.forEach((n) => {
+			if (!(n instanceof Neuron)) return
 			r = n.r
 			if (title) {
 				let name = n.name ? n.name : 'N' + n.uid
 				let rect2 = SUN.DEFAULT_FONT.get_StringRect(name)
 				render.draw_String(Math.round(n.pos[0] - rect2.size.x / 2), Math.round(n.pos[1] - r - rect2.size.y - 3), name, SUN.DEFAULT_FONT, HIGHLIGHT)
 			}
-			if (n.layer !== 0) {
+			if (n.layer !== 0 && (n instanceof Neuron)) {
 				let name = showb ? ('B' + n.uid) : (Math.round(n.b * 100) / 100).toString()
 				let rect2 = SUN.DEFAULT_FONT.get_StringRect(name)
 				if (b)
 					render.draw_String(Math.round(n.pos[0] - rect2.size.x / 2), Math.round(n.pos[1] + r + 3), name, SUN.DEFAULT_FONT)
 			}
 			n.tolist.forEach((l) => {
+				if (!l.draw) return;
 				let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, l.w), 0, 1)
 				let color = SUN.Color.RGB(1 - percent, percent, 0)
 				let dir = (new SUN.Vector2(l.to.pos[0] - l.from.pos[0], l.to.pos[1] - l.from.pos[1])).normalize()
