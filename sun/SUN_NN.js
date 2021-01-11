@@ -394,7 +394,7 @@ export class Neuron {
 		return false;
 	}
 
-	link(n, w = Math.random() * 2 - 1, draw) {
+	link(n, w = Math.random() > 0.5 ? 0.1 : -0.1, draw) {
 		if (this.has_LinkTo(n)) return;
 		let l = new NeuralLink(this, n, w, draw);
 		this.tolist.push(l);
@@ -537,6 +537,67 @@ export class Momentum extends Optimizer {
 				})
 			})
 		})
+	}
+}
+
+export class BatchMomentum extends Optimizer {
+	constructor(learning_rate = 0.001, a = 0.8, patchsize = 20) {
+		super();
+		this.learning_rate = learning_rate;
+		this.a = a;
+		this.last = {};
+		this.sum = {};
+		this.patchsize = patchsize;
+		this.current = 0;
+	}
+
+	init(ns) {
+		ns.forEach((nl) => {
+			nl.forEach((n) => {
+				this.last[n.uid] = 0;
+				this.sum[n.uid] = 0;
+				n.tolist.forEach((l) => {
+					this.last[l.uid] = 0;
+					this.sum[l.uid] = 0;
+				})
+			})
+		})
+		// console.log(this)
+	}
+
+	next(ns) {
+		this.current++;
+		if (this.current < this.patchsize) {
+			ns.forEach((nl) => {
+				nl.forEach((n) => {
+					let dB = n.dB;
+					this.sum[n.uid] += dB;
+					n.tolist.forEach((l) => {
+						let dW = l.dW;
+						this.sum[l.uid] += dW;
+					})
+				})
+			})
+		}
+		else {
+			ns.forEach((nl) => {
+				nl.forEach((n) => {
+					this.sum[n.uid] += n.dB;
+					let dB = this.last[n.uid] * this.a + this.sum[n.uid] / this.patchsize * this.learning_rate;
+					this.sum[n.uid] = 0;
+					n.b -= dB;
+					this.last[n.uid] = dB;
+					n.tolist.forEach((l) => {
+						this.sum[l.uid] += l.dW;
+						let dW = this.last[l.uid] * this.a + this.sum[l.uid] / this.patchsize * this.learning_rate;
+						this.sum[l.uid] = 0;
+						l.w -= dW;
+						this.last[l.uid] = dW;
+					})
+				})
+			})
+			this.current = 0;
+		}
 	}
 }
 

@@ -42,6 +42,7 @@
 </style>
 
 <script type="text/javascript" src="./MNIST_DATA.json"></script>
+<script type="text/javascript" src="./MNIST_TEST.json"></script>
 
 <script type="module">
 	import * as SUN from './GBsun.js'
@@ -151,9 +152,28 @@
 	gameconsole.init = (sc) => {
 	}
 
+	let idx = 0;
 	gameconsole.action = (sc, delta) => {
 		if (sc.Keyboard.keymap[' '] && sc.Keyboard.keymap[' '].once) {
 			train = !train
+		}
+		if (sc.Keyboard.keymap['Enter'] && sc.Keyboard.keymap['Enter'].once) {
+			let data = TEST[idx % TEST.length];
+			idx++;
+			let input = {}
+			img = []
+			for (let i = 1; i <= 28; i++) {
+				let list = []
+				for (let j = 1; j <= 28; j++) {
+					let id = (i - 1) * 28 + j
+					let a = data.image[id - 1]
+					input['I' + id] = a / 255
+					list.push(SUN.Color.RGB(1, 1, 1, a / 255))
+				}
+				img.push(list)
+			}
+			out = NN.forward(ns, input)
+			target = data.label
 		}
 	}
 
@@ -177,6 +197,7 @@
 	let total = 0;
 	let right = 0;
 	let frames = 0;
+	let target = 0;
 	gameconsole.render = (sc, delta) => {
 		// test.draw(sc.Renderer, 5, 10, WHITE, 1)
 
@@ -212,6 +233,7 @@
 				}
 				// if (data.label === 3)
 				wanted['IS ' + data.label] = 1.0
+				target = data.label
 				// console.log(input)
 				let [ans, l] = NN.backpropagation(ns, input, wanted, gd)
 				loss1 = l
@@ -242,8 +264,8 @@
 			}
 		}
 		// console.log(out)
-		sc.Renderer.draw_String(400, 111, 'RESULT = ' + maxnum, Font, SUN.Color.COLOR('WHITE'))
-		sc.Renderer.draw_String(400, 121, 'Correct = ' + Math.round(right / total * 100) / 100 + '/100', Font, SUN.Color.COLOR('WHITE'))
+		sc.Renderer.draw_String(400, 111, 'RESULT = ' + maxnum, Font, target === maxnum ? Color[11] : Color[8])
+		sc.Renderer.draw_String(400, 121, 'Correct = ' + Math.round(right / total * 10000) / 100 + '/100', Font, SUN.Color.COLOR('WHITE'))
 		let sprite = new SUN.Sprite(img)
 		sc.Renderer.draw_Sprite(30, 74, sprite, 3)
 		NN.draw_NN(150, 22, 70, 40, 12, sc.Renderer, nsd, maxsized, true, false, true)
