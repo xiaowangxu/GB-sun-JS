@@ -333,6 +333,21 @@ export const SIGMOID = {
 	}
 }
 
+export const STEP = {
+	f: (x) => {
+		return x > 0 ? 1 : 0;
+	},
+	dF: (x) => {
+		return 0;
+	},
+	func: (x, e) => {
+		return new FM_List([
+			new FM_Text('STEP', FUNCTION),
+			new FM_BRACE(x)
+		])
+	}
+}
+
 export const RELU = {
 	f: (x) => {
 		return Math.max(0, x);
@@ -360,7 +375,7 @@ export const TANH = {
 		let e1 = Math.exp(-x);
 		return (e - e1) / (e + e1);
 	},
-	func: (x) => {
+	func: (x, e) => {
 		return new FM_List([
 			new FM_Text('tanh', FUNCTION),
 			new FM_BRACE(x)
