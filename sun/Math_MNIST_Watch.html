@@ -1,0 +1,230 @@
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>MNIST</title>
+</head>
+
+<body>
+	<div id="container">
+	</div>
+	<!-- <input type="range" min="0" max="10" step="0.1" oninput="changeValue1(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue2(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue3(this.value)"> -->
+</body>
+
+<style>
+	body {
+		margin: 0px;
+		height: 100%;
+		width: 100%;
+		background-color: rgb(255, 255, 255);
+	}
+
+	#container {
+		width: 100%;
+		height: 100%;
+		padding: auto;
+		background-color: rgb(255, 255, 255);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+
+	#container>canvas {
+		/* width: 500px; */
+		height: 100%;
+		/* width: 100%; */
+		/* height: 500px; */
+	}
+</style>
+
+<script type="text/javascript" src="./MNIST_DATA.json"></script>
+<script type="text/javascript" src="./MNIST_TEST.json"></script>
+<script type="text/javascript" src="./weights_relu5.json"></script>
+
+<script type="module">
+	import * as SUN from './GBsun.js'
+	import * as NN from './SUN_NN.js'
+
+	let gameconsole = new SUN.sunConsole(500, 290, true)
+
+	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
+
+	const Font = SUN.Font.DEFAULT()
+
+	const Color = {
+		0: SUN.Color.PICO(0),
+		1: SUN.Color.PICO(1),
+		2: SUN.Color.PICO(2),
+		3: SUN.Color.PICO(3),
+		4: SUN.Color.PICO(4),
+		5: SUN.Color.PICO(5),
+		6: SUN.Color.PICO(6),
+		7: SUN.Color.PICO(7),
+		8: SUN.Color.PICO(8),
+		9: SUN.Color.PICO(9),
+		10: SUN.Color.PICO(10),
+		11: SUN.Color.PICO(11),
+		12: SUN.Color.PICO(12),
+		13: SUN.Color.PICO(13),
+		14: SUN.Color.PICO(14),
+		15: SUN.Color.PICO(15)
+	}
+
+	const WHITE = SUN.Color.COLOR('white')
+	const HIGHLIGHT = SUN.Color.PICO(10)
+	const FUNCTION = SUN.Color.PICO(14)
+	const TESTCOLOR = SUN.Color.RGB8(255, 255, 0, 20)
+
+	gameconsole.init = (sc) => {
+	}
+
+	const POINTER = new SUN.Sprite([[SUN.Color.RGB(1, 1, 1)]]);
+	gameconsole.action = (sc, delta) => {
+
+	}
+
+	gameconsole.render = (sc, delta) => {
+		// test.draw(sc.Renderer, 5, 10, WHITE, 1)
+		let starty = 10
+		let y = 0
+		for (let c = 0; c < 16; c++) {
+			let ans = []
+			for (let i = 0; i < 28; i++) {
+				let list = []
+				for (let j = 0; j < 28; j++) {
+					let id = i * 28 + j
+					let w = WEIGHT[0][c].fromw[id]
+					let color
+					if (w < 0) {
+						color = SUN.Color.RGB(Math.abs(w) * 3, 0, 0)
+					}
+					else {
+						color = SUN.Color.RGB(0, Math.abs(w) * 3, 0)
+					}
+					// let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, w), 0, 1)
+					// let color = SUN.Color.RGB(1 - percent, percent, 0)
+					list.push(color)
+				}
+				ans.push(list)
+			}
+			sc.Renderer.draw_Sprite(10 + c * 30, starty + y * 40, new SUN.Sprite(ans))
+		}
+
+		y = 1
+		for (let c = 0; c < 16; c++) {
+			let ans = []
+			for (let i = 0; i < 4; i++) {
+				let list = []
+				for (let j = 0; j < 4; j++) {
+					let id = i * 4 + j
+					let w = WEIGHT[1][c].fromw[id]
+					let color
+					if (w < 0) {
+						color = SUN.Color.RGB(Math.abs(w) * 2, 0, 0)
+					}
+					else {
+						color = SUN.Color.RGB(0, Math.abs(w) * 2, 0)
+					}
+					// let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, w), 0, 1)
+					// let color = SUN.Color.RGB(1 - percent, percent, 0)
+					list.push(color)
+				}
+				ans.push(list)
+			}
+			sc.Renderer.draw_Sprite(10 + c * 30 + 2, starty + y * 40, new SUN.Sprite(ans), 6)
+		}
+
+		y = 2
+		let last = []
+		for (let c = 0; c < 16; c++) {
+			let ans = []
+			let ans2 = []
+			for (let i = 0; i < 28; i++) {
+				let list = []
+				let list2 = []
+				for (let j = 0; j < 28; j++) {
+					let id = i * 28 + j
+					let sum = 0
+					let color
+					for (let c2 = 0; c2 < 16; c2++) {
+						let w = WEIGHT[0][c2].fromw[id]
+						let w2 = WEIGHT[1][c].fromw[c2]
+						sum += w * w2
+					}
+					if (sum < 0) {
+						color = SUN.Color.RGB(Math.abs(sum) * 2, 0, 0)
+					}
+					else {
+						color = SUN.Color.RGB(0, Math.abs(sum) * 2, 0)
+					}
+					list.push(color)
+					list2.push(sum)
+				}
+				ans.push(list)
+				ans2.push(list2)
+			}
+			last.push(ans2)
+			sc.Renderer.draw_Sprite(10 + c * 30, starty + y * 40, new SUN.Sprite(ans))
+		}
+
+		y = 3
+		for (let c = 0; c < 10; c++) {
+			let ans = []
+			for (let i = 0; i < 4; i++) {
+				let list = []
+				for (let j = 0; j < 4; j++) {
+					let id = i * 4 + j
+					let w = WEIGHT[2][c].fromw[id]
+					let color
+					if (w < 0) {
+						color = SUN.Color.RGB(Math.abs(w) * 2, 0, 0)
+					}
+					else {
+						color = SUN.Color.RGB(0, Math.abs(w) * 2, 0)
+					}
+					// let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, w), 0, 1)
+					// let color = SUN.Color.RGB(1 - percent, percent, 0)
+					list.push(color)
+				}
+				ans.push(list)
+			}
+			sc.Renderer.draw_Sprite(10 + c * 30 + 2, starty + y * 40, new SUN.Sprite(ans), 6)
+		}
+
+		y = 4
+		for (let c = 0; c < 10; c++) {
+			let ans = []
+			for (let i = 0; i < 28; i++) {
+				let list = []
+				let list2 = []
+				for (let j = 0; j < 28; j++) {
+					let sum = 0
+					let color
+					for (let c2 = 0; c2 < 16; c2++) {
+						let w = last[c2][i][j]
+						let w2 = WEIGHT[2][c].fromw[c2]
+						sum += w * w2
+					}
+					if (sum < 0) {
+						color = SUN.Color.RGB(Math.abs(sum) * 2, 0, 0)
+					}
+					else {
+						color = SUN.Color.RGB(0, Math.abs(sum) * 2, 0)
+					}
+					list.push(color)
+				}
+				ans.push(list)
+			}
+			sc.Renderer.draw_Sprite(10 + c * 30, starty + y * 40, new SUN.Sprite(ans))
+		}
+
+	}
+
+	gameconsole.run()
+</script>
+
+</html>

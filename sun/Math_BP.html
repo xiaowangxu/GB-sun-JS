@@ -43,149 +43,36 @@
 
 <script type="module">
 	import * as SUN from './GBsun.js'
-	import * as NN from './SUN_NN.js'
-
-	let gameconsole = new SUN.sunConsole(1000, 500, true)
-
+	console.log(":>>>>")
+	let gameconsole = new SUN.sunConsole(500, 500, false, false)
 	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
 
 	const Font = SUN.Font.DEFAULT()
-
-	const Color = {
-		0: SUN.Color.PICO(0),
-		1: SUN.Color.PICO(1),
-		2: SUN.Color.PICO(2),
-		3: SUN.Color.PICO(3),
-		4: SUN.Color.PICO(4),
-		5: SUN.Color.PICO(5),
-		6: SUN.Color.PICO(6),
-		7: SUN.Color.PICO(7),
-		8: SUN.Color.PICO(8),
-		9: SUN.Color.PICO(9),
-		10: SUN.Color.PICO(10),
-		11: SUN.Color.PICO(11),
-		12: SUN.Color.PICO(12),
-		13: SUN.Color.PICO(13),
-		14: SUN.Color.PICO(14),
-		15: SUN.Color.PICO(15)
-	}
-
-	const WHITE = SUN.Color.COLOR('white')
-	const HIGHLIGHT = SUN.Color.PICO(10)
-	const FUNCTION = SUN.Color.PICO(14)
-	const TESTCOLOR = SUN.Color.RGB8(255, 255, 0, 20)
-	// 2-link
-	// let net2, maxsize2, func2;
-	// {
-	// 	let i = new NN.Neuron('I1', 0, NN.SIGMOID);
-	// 	let o = new NN.Neuron('Out1', 1, NN.SIGMOID);
-	// 	i.link(o, 0.5);
-	// 	[net2, maxsize2] = NN.get_NN([i, o]);
-	// 	func2 = o.get_Function(true, false);
-	// }
-	// let op2 = new NN.GradientDescent(0.0001);
-	// op2.init(net2);
-
-	// 3-link
-	// let net3, maxsize3, func3;
-	// {
-	// 	let i = new NN.Neuron('I1', 0, NN.SIGMOID);
-	// 	let h = new NN.Neuron('H1', 1, NN.SIGMOID);
-	// 	let o = new NN.Neuron('Out1', 2, NN.SIGMOID);
-	// 	i.link(h, 0.5);
-	// 	h.link(o, 0.5);
-	// 	[net3, maxsize3] = NN.get_NN([i, h, o]);
-	// 	func3 = o.get_Function(true, false);
-	// }
-	// let op3 = new NN.GradientDescent(0.0001);
-	// op3.init(net3);
-
-	// 4-link
-	let net4, maxsize4, func4, func3, func2;
-	{
-		let i = new NN.Neuron('I1', 0, NN.SIGMOID);
-		let h1 = new NN.Neuron('H1', 1, NN.SIGMOID);
-		let h2 = new NN.Neuron('H2', 2, NN.SIGMOID);
-		let o = new NN.Neuron('Out1', 3, NN.SIGMOID);
-		i.link(h1, 0.5);
-		h1.link(h2, 0.5);
-		h2.link(o, 0.5);
-		[net4, maxsize4] = NN.get_NN([i, h1, h2, o]);
-		func4 = new NN.FM_List([new NN.FM_Text('Out1'), new NN.FM_Text(' = '), o.get_Function(false, false)]);
-		func3 = new NN.FM_List([new NN.FM_Text(' H2'), new NN.FM_Text(' = '), h2.get_Function(false, false)]);
-		func2 = new NN.FM_List([new NN.FM_Text('H1'), new NN.FM_Text(' = '), h1.get_Function(false, false)]);
-	}
-	let op4 = new NN.GradientDescent(0.0001);
-	op4.init(net4);
-
-	// 2-4-link
-	let net24, maxsize24, func24;
-	{
-		let i1 = new NN.Neuron('I1', 0, NN.SIGMOID);
-		let i2 = new NN.Neuron('I2', 0, NN.SIGMOID);
-		let h1 = new NN.Neuron('H1', 1, NN.SIGMOID);
-		let h2 = new NN.Neuron('H2', 1, NN.SIGMOID);
-		let o1 = new NN.Neuron('Out1', 2, NN.SIGMOID);
-		let o2 = new NN.Neuron('Out2', 2, NN.SIGMOID);
-		i1.link(h1, 0.5);
-		i1.link(h2, 0.5);
-		i2.link(h1, 0.5);
-		i2.link(h2, 0.5);
-		h1.link(o1, 0.5);
-		h1.link(o2, 0.5);
-		h2.link(o1, 0.5);
-		h2.link(o2, 0.5);
-		[net24, maxsize24] = NN.get_NN([i1, i2, h1, h2, o1, o2]);
-		let func24o1 = o1.get_Function(false, false);
-		let func24o2 = o2.get_Function(false, false);
-		func24 = new NN.FM_List([new NN.FM_POW([new NN.FM_BRACE(func24o1), new NN.FM_Text('2')]), new NN.FM_Text(' + '), new NN.FM_POW([new NN.FM_BRACE(func24o2), new NN.FM_Text('2')])])
-	}
-	let op24 = new NN.GradientDescent(0.0001);
-	op24.init(net24);
-
 	gameconsole.init = (sc) => {
+		sc.Renderer.draw_Circle(250, 250, 200, SUN.Color.RGB(1, 1, 1))
 	}
 
+	let train
 	gameconsole.action = (sc, delta) => {
 		if (sc.Keyboard.keymap[' '] && sc.Keyboard.keymap[' '].once) {
 			train = !train
 		}
 	}
 
-	let train = false
-	let lossarr1 = [];
 	gameconsole.render = (sc, delta) => {
-
-		let loss1
 		if (train) {
-			for (let i = 0; i < 500; i++) {
-				let a = (Math.random() > 0.5) ? 1 : 0
-				let b = (Math.random() > 0.5) ? 1 : 0
-				let c = (Math.random() > 0.5) ? 1 : 0
-				let d = (Math.random() > 0.5) ? 1 : 0
-				let out = a * 1 + b * 2 + c * 4 + d * 8
-				let [ans, l] = backpropagation(ns, { I1: a, I2: b, I3: c, I4: d }, { Out1: out }, gd)
-				loss1 = l
+			for (let i = 0; i < 1000; i++) {
+				let a = Math.random()
+				// let r = a ** 0.5 * 200
+				// let a = Math.round(Math.random() * contr)
+				let t = Math.random() * 2 * Math.PI
+				let r = (Math.random() * 200)
+				// console.log(a)
+				let x = Math.round(Math.cos(t) * r)
+				let y = Math.round(Math.sin(t) * r)
+				sc.Renderer.draw_Pixel(x + 250, y + 250, SUN.Color.RGB(Math.random(), Math.random(), Math.random()))
 			}
-			// console.log(loss)
-			lossarr1.push(SUN.Fn.clamp(loss1 * 500, 0, 50))
-		}
-		// NN.draw_NN(40, 40, 60, 100, 13, sc.Renderer, net2, maxsize2, true, true, true, true, true);
-		func2.draw(sc.Renderer, 284, 100, WHITE, 1);
-		// NN.draw_NN(40, 110, 60, 100, 13, sc.Renderer, net3, maxsize3, true, true, true, true, true);
-		func3.draw(sc.Renderer, 247, 130, WHITE, 1);
-		NN.draw_NN(40, 40, 60, 100, 13, sc.Renderer, net4, maxsize4, true, true, true, true, true);
-		func4.draw(sc.Renderer, 210, 160, WHITE, 1);
 
-		NN.draw_NN(40, 250, 100, 100, 13, sc.Renderer, net24, maxsize24, true, true, true, true, true);
-		func24.draw(sc.Renderer, 100, 400, WHITE, 1);
-		let len = lossarr1.length
-		let w = sc.Renderer.size.x
-		for (let i = 1; i < len; i++) {
-			sc.Renderer.draw_Line_DDA((i - 1) * w / len, 480 - lossarr1[i - 1], (i) * w / len, 480 - lossarr1[i], SUN.Color.PICO(8))
-		}
-		if (lossarr1.length > 300) {
-			lossarr1.shift();
 		}
 	}
 

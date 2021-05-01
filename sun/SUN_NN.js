@@ -366,6 +366,25 @@ export const RELU = {
 	}
 }
 
+export const LEAKRELU = {
+	f: (x) => {
+		if (x < 0) return x / 2;
+		return x;
+	},
+	dF: (x) => {
+		return x < 0 ? 0.5 : 1;
+	},
+	func: (x) => {
+		return new FM_List([
+			new FM_Text('max', FUNCTION),
+			new FM_BRACE(new FM_List([
+				new FM_Text('0,'),
+				x
+			]))
+		])
+	}
+}
+
 export const TANH = {
 	f: (x) => {
 		return Math.tanh(x);
@@ -384,7 +403,7 @@ export const TANH = {
 }
 
 export class Neuron {
-	constructor(name = undefined, layer = 0, activefunc = RELU, bias = 1) {
+	constructor(name = undefined, layer = 0, activefunc = RELU, bias = 0) {
 		this.uid = uid++;
 		this.name = name;
 		this.layer = layer;
@@ -409,7 +428,7 @@ export class Neuron {
 		return false;
 	}
 
-	link(n, w = Math.random() > 0.5 ? 0.1 : -0.1, draw) {
+	link(n, w = Math.random() > 0.5 ? 0.1 : -0.1, draw = true) {
 		if (this.has_LinkTo(n)) return;
 		let l = new NeuralLink(this, n, w, draw);
 		this.tolist.push(l);
@@ -759,4 +778,31 @@ export function get_NN(ns) {
 		return a[0].layer > b[0].layer ? 1 : 0
 	})
 	return [layerarr, maxsize]
+}
+
+export function save_NN(nn) {
+	let ans = [];
+	for (let i = 1; i < nn.length; i++) {
+		let layer = nn[i];
+		ans.push(layer.map((n) => {
+			let data = {
+				b: n.b,
+				fromw: n.fromlist.map((l) => l.w)
+			}
+			return data
+		}))
+	}
+	return ans;
+}
+
+export function load_NN(nn, weights) {
+	for (let i = 1; i < nn.length; i++) {
+		let layer = nn[i];
+		layer.forEach((n, j) => {
+			n.b = weights[i - 1][j].b
+			n.fromlist.forEach((l, k) => {
+				l.w = weights[i - 1][j].fromw[k]
+			})
+		})
+	}
 }
