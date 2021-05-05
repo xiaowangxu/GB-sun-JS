@@ -1,0 +1,400 @@
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>MNIST</title>
+</head>
+
+<body>
+	<div id="container">
+	</div>
+	<!-- <input type="range" min="0" max="10" step="0.1" oninput="changeValue1(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue2(this.value)">
+	<input type="range" min="0" max="10" step="0.1" oninput="changeValue3(this.value)"> -->
+</body>
+
+<style>
+	body {
+		margin: 0px;
+		height: 100%;
+		width: 100%;
+		background-color: rgb(255, 255, 255);
+	}
+
+	#container {
+		width: 100%;
+		height: 100%;
+		padding: auto;
+		background-color: rgb(255, 255, 255);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+
+	#container>canvas {
+		/* width: 500px; */
+		height: 100%;
+		/* width: 100%; */
+		/* height: 500px; */
+	}
+</style>
+
+<script type="text/javascript" src="./MNIST_DATA.json"></script>
+<script type="text/javascript" src="./MNIST_TEST.json"></script>
+<script type="text/javascript" src="./weights_test4.json"></script>
+
+<script type="module">
+	import * as SUN from './GBsun.js'
+	import * as NN from './SUN_NN.js'
+
+	let gameconsole = new SUN.sunConsole(500, 290, true)
+
+	document.getElementById('container').appendChild(gameconsole.get_ConsoleDOM())
+
+	const Font = SUN.Font.DEFAULT()
+
+	const Color = {
+		0: SUN.Color.PICO(0),
+		1: SUN.Color.PICO(1),
+		2: SUN.Color.PICO(2),
+		3: SUN.Color.PICO(3),
+		4: SUN.Color.PICO(4),
+		5: SUN.Color.PICO(5),
+		6: SUN.Color.PICO(6),
+		7: SUN.Color.PICO(7),
+		8: SUN.Color.PICO(8),
+		9: SUN.Color.PICO(9),
+		10: SUN.Color.PICO(10),
+		11: SUN.Color.PICO(11),
+		12: SUN.Color.PICO(12),
+		13: SUN.Color.PICO(13),
+		14: SUN.Color.PICO(14),
+		15: SUN.Color.PICO(15)
+	}
+
+	const WHITE = SUN.Color.COLOR('white')
+	const HIGHLIGHT = SUN.Color.PICO(10)
+	const FUNCTION = SUN.Color.PICO(14)
+	const TESTCOLOR = SUN.Color.RGB8(255, 255, 0, 20)
+
+	// out
+	let o0 = new NN.Neuron('IS 0', 3, NN.SIGMOID);
+	let o1 = new NN.Neuron('IS 1', 3, NN.SIGMOID);
+	let o2 = new NN.Neuron('IS 2', 3, NN.SIGMOID);
+	let o3 = new NN.Neuron('IS 3', 3, NN.SIGMOID);
+	let o4 = new NN.Neuron('IS 4', 3, NN.SIGMOID);
+	let o5 = new NN.Neuron('IS 5', 3, NN.SIGMOID);
+	let o6 = new NN.Neuron('IS 6', 3, NN.SIGMOID);
+	let o7 = new NN.Neuron('IS 7', 3, NN.SIGMOID);
+	let o8 = new NN.Neuron('IS 8', 3, NN.SIGMOID);
+	let o9 = new NN.Neuron('IS 9', 3, NN.SIGMOID);
+	let nodes = [o0, o1, o2, o3, o4, o5, o6, o7, o8, o9];
+	let nodesd = [o0, o1, new NN.MoreNeuron('2 ... 7', 3), o8, o9];
+	let outs = [o0, o1, o2, o3, o4, o5, o6, o7, o8, o9];
+
+	let h1s = [];
+
+	for (let i = 1; i <= 16; i++) {
+		let h = new NN.Neuron('H2' + i, 2, NN.SIGMOID);
+		h1s.push(h);
+		nodes.push(h);
+		if (i === 1 || i === 16) nodesd.push(h);
+		if (i === 14) nodesd.push(new NN.MoreNeuron('...', 2))
+		outs.forEach((o, j) => {
+			h.link(o, undefined, j === 0 || j === 1 || j === 8 || j === 9);
+		})
+	}
+
+	let h2s = [];
+	for (let i = 1; i <= 16; i++) {
+		let h = new NN.Neuron('H1' + i, 1, NN.SIGMOID);
+		h2s.push(h);
+		nodes.push(h);
+		if (i === 1 || i === 16) nodesd.push(h);
+		if (i === 14) nodesd.push(new NN.MoreNeuron('...', 1))
+		h1s.forEach((o, j) => {
+			h.link(o, undefined, (j === 0 || j === 15));
+		})
+	}
+
+
+	for (let i = 1; i <= 784; i++) {
+		let h = new NN.Neuron('I' + i, 0);
+		nodes.push(h);
+		if (i === 330 || i === 331 || i === 333 || i === 334) nodesd.push(h);
+		if (i === 332) nodesd.push(new NN.MoreNeuron('...', 0))
+		h2s.forEach((o, j) => {
+			// console.log(j, (j === 0 || j === 1 || j === 14 || j === 15))
+			h.link(o, undefined, (j === 0 || j === 15));
+		})
+	}
+
+	let [ns, maxsize] = NN.get_NN(nodes);
+	let [nsd, maxsized] = NN.get_NN(nodesd);
+	let gd = new NN.Momentum(0.00005, 0.8);
+	gd.init(ns);
+
+	gameconsole.init = (sc) => {
+	}
+
+	let idx = 0;
+
+	let draw = false;
+
+	let draw_img = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+	console.log(draw_img)
+
+	const POINTER = new SUN.Sprite([[SUN.Color.RGB(1, 1, 1)]]);
+	gameconsole.action = (sc, delta) => {
+		if (sc.Keyboard.keymap[' '] && sc.Keyboard.keymap[' '].once) {
+			train = !train;
+			draw = false;
+		}
+		if (sc.Keyboard.keymap['Enter'] && sc.Keyboard.keymap['Enter'].once) {
+			let data = TEST[idx % TEST.length];
+			idx++;
+			let input = {}
+			img = []
+			for (let i = 1; i <= 28; i++) {
+				let list = []
+				for (let j = 1; j <= 28; j++) {
+					let id = (i - 1) * 28 + j
+					let a = data.image[id - 1]
+					input['I' + id] = a / 255
+					list.push(SUN.Color.RGB(1, 1, 1, a / 255))
+				}
+				img.push(list)
+			}
+			out = NN.forward(ns, input)
+			target = data.label
+		}
+		if (sc.Keyboard.keymap['t'] && sc.Keyboard.keymap['t'].once) {
+			let correct = 0;
+			for (let i = 0; i < TEST.length; i++) {
+				let data = TEST[i];
+				let input = {}
+				for (let i = 1; i <= 28; i++) {
+					let list = []
+					for (let j = 1; j <= 28; j++) {
+						let id = (i - 1) * 28 + j
+						let a = data.image[id - 1]
+						input['I' + id] = a > 0.97 ? 1 : 0
+						list.push(SUN.Color.RGB(1, 1, 1, a > 0.97 ? 1 : 0))
+					}
+					img.push(list)
+				}
+				out = NN.forward(ns, input)
+				let max = out['IS 0'];
+				let maxnum = 0;
+				for (let i = 1; i <= 9; i++) {
+					if (out['IS ' + i] > max) {
+						max = out['IS ' + i]
+						maxnum = i
+					}
+				}
+				if (data.label === maxnum) correct++;
+				if (i % 100 === 0) {
+					console.log(`${i} of ${TEST.length}`, correct * 100 / (i + 1))
+				}
+			}
+			console.log("accuracy: ", correct * 100 / TEST.length)
+
+		}
+		if (sc.Keyboard.keymap['d'] && sc.Keyboard.keymap['d'].once) {
+			draw = true;
+			train = false;
+			draw_img = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
+		}
+		if (sc.Keyboard.keymap['s'] && sc.Keyboard.keymap['s'].once) {
+			function downloadFile(content, filename) {
+				var a = document.createElement('a')
+				var blob = new Blob([content])
+				var url = window.URL.createObjectURL(blob)
+				a.href = url
+				a.download = filename
+				a.click()
+				window.URL.revokeObjectURL(url)
+			}
+			let data = NN.save_NN(ns);
+			let content = "var WEIGHT = " + JSON.stringify(data, null, 2)
+			downloadFile(content, "weights.json")
+		}
+		if (sc.Keyboard.keymap['l'] && sc.Keyboard.keymap['l'].once) {
+			NN.load_NN(ns, WEIGHT);
+		}
+		if (draw) {
+			// console.log(sc.Mouse)
+			if (30 <= sc.Mouse.position.x && sc.Mouse.position.x <= 30 + 28 * 3 && 74 <= sc.Mouse.position.y && sc.Mouse.position.x <= 74 + 28 * 3) {
+				if (sc.Mouse.keymap[0]) {
+					// if (sc.Mouse.keymap)
+					let x = Math.min(Math.round((sc.Mouse.position.x - 30) / 3), 26)
+					let y = Math.min(Math.round((sc.Mouse.position.y - 74) / 3), 26)
+					draw_img[x][y] = 1.0
+					// draw_img[x - 1][y - 1] = 1.0
+					// draw_img[x - 1][y] = 1.0
+					// draw_img[x][y - 1] = 1.0
+					draw_img[x + 1][y + 1] = 1.0
+					draw_img[x][y + 1] = 1.0
+					draw_img[x + 1][y] = 1.0
+					// draw_img[x - 1][y + 1] = 1.0
+					// draw_img[x + 1][y - 1] = 1.0
+				}
+				if (sc.Mouse.keymap[2]) {
+					// if (sc.Mouse.keymap)
+					let x = Math.min(Math.round((sc.Mouse.position.x - 30) / 3), 27)
+					let y = Math.min(Math.round((sc.Mouse.position.y - 74) / 3), 27)
+					draw_img[x][y] = 0
+				}
+				if (sc.Mouse.keymap[0] || sc.Mouse.keymap[2]) {
+					let input = {}
+					for (let i = 0; i < 28; i++) {
+						for (let j = 0; j < 28; j++) {
+							let id = (i) * 28 + j + 1
+							let a = draw_img[j][i]
+							input['I' + id] = a
+						}
+					}
+					console.log(input)
+					out = NN.forward(ns, input)
+				}
+			}
+		}
+	}
+
+	let train = false
+	let lossarr1 = [];
+	let img = [[]]
+	let times = 0
+	let loss1 = 10
+	let out = {
+		'IS 0': 0,
+		'IS 1': 0,
+		'IS 2': 0,
+		'IS 3': 0,
+		'IS 4': 0,
+		'IS 5': 0,
+		'IS 6': 0,
+		'IS 7': 0,
+		'IS 8': 0,
+		'IS 9': 0,
+	}
+	let total = 0;
+	let right = 0;
+	let frames = 0;
+	let target = 0;
+
+	gameconsole.render = (sc, delta) => {
+		// test.draw(sc.Renderer, 5, 10, WHITE, 1)
+
+		if (train) {
+			frames++;
+
+			for (let i = 0; i < 20; i++) {
+				times++;
+				let input = {}
+				total++;
+				let data = DATA[times % DATA.length]
+				img = []
+				for (let i = 1; i <= 28; i++) {
+					let list = []
+					for (let j = 1; j <= 28; j++) {
+						let id = (i - 1) * 28 + j
+						let a = data.image[id - 1]
+						input['I' + id] = a > 0.97 ? 1 : 0
+						list.push(SUN.Color.RGB(1, 1, 1, a > 0.97 ? 1 : 0))
+					}
+					img.push(list)
+				}
+				let wanted = {
+					'IS 0': 0,
+					'IS 1': 0,
+					'IS 2': 0,
+					'IS 3': 0,
+					'IS 4': 0,
+					'IS 5': 0,
+					'IS 6': 0,
+					'IS 7': 0,
+					'IS 8': 0,
+					'IS 9': 0,
+				}
+				// if (data.label === 3)
+				wanted['IS ' + data.label] = 1.0
+				target = data.label
+				// console.log(input)
+				let [ans, l] = NN.backpropagation(ns, input, wanted, gd)
+				loss1 = l
+				out = ans
+				let max = out['IS 0'];
+				let maxnum = 0;
+				for (let i = 1; i <= 9; i++) {
+					if (out['IS ' + i] > max) {
+						max = out['IS ' + i]
+						maxnum = i
+					}
+				}
+				if (data.label === maxnum) right++;
+			}
+			// console.log(loss)
+
+
+			lossarr1.push([SUN.Fn.clamp(loss1 * 10, 0, 40), frames])
+			// console.log(loss1)
+			// console.log(out)
+		}
+		let max = out['IS 0'];
+		let maxnum = 0;
+		for (let i = 1; i <= 9; i++) {
+			if (out['IS ' + i] > max) {
+				max = out['IS ' + i]
+				maxnum = i
+			}
+		}
+
+
+
+		sc.Renderer.draw_String(400, 111, 'RESULT = ' + maxnum, Font, target === maxnum ? Color[11] : Color[8])
+		sc.Renderer.draw_String(400, 121, 'Correct = ' + Math.round(right / total * 10000) / 100 + '/100', Font, SUN.Color.COLOR('WHITE'))
+		if (draw) {
+			sc.Renderer.draw_Line_DDA(29, 73, 30 + 28 * 3, 73, SUN.Color.RGB(1, 0, 0))
+			sc.Renderer.draw_Line_DDA(29, 73, 29, 74 + 28 * 3, SUN.Color.RGB(1, 0, 0))
+			sc.Renderer.draw_Line_DDA(30, 74 + 28 * 3, 30 + 28 * 3, 74 + 28 * 3, SUN.Color.RGB(1, 0, 0))
+			sc.Renderer.draw_Line_DDA(30 + 28 * 3, 74 + 28 * 3, 30 + 28 * 3, 73, SUN.Color.RGB(1, 0, 0))
+			img = []
+			for (let i = 0; i < 28; i++) {
+				let list = []
+				for (let j = 0; j < 28; j++) {
+					list.push(SUN.Color.RGB(1, 1, 1, draw_img[j][i]))
+				}
+				img.push(list)
+			}
+		}
+
+		let sprite = new SUN.Sprite(img)
+		sc.Renderer.draw_Sprite(30, 74, sprite, 3)
+		NN.draw_NN(150, 22, 70, 40, 12, sc.Renderer, nsd, maxsized, true, false, true)
+		let len = lossarr1.length
+		let w = sc.Renderer.size.x
+		sc.Renderer.draw_Line_DDA(0, 230, w, 230, TESTCOLOR)
+		sc.Renderer.draw_String(4, 220, 'loss >= 0.4', Font, TESTCOLOR)
+		sc.Renderer.draw_String(55, 220, loss1.toString(), Font, TESTCOLOR)
+		sc.Renderer.draw_Line_DDA(0, 270, w, 270, TESTCOLOR)
+		sc.Renderer.draw_String(4, 260, 'loss = 0', Font, TESTCOLOR)
+		for (let i = 1; i < len; i++) {
+			if (lossarr1[i - 1][1] % 200 === 0) {
+				sc.Renderer.draw_String((i - 1) * w / (len - 1), 274, (lossarr1[i - 1][1]).toString(), Font, TESTCOLOR)
+				// sc.Renderer.draw_Line_DDA((i - 1) * w / (len - 1), 231, (i - 1) * w / (len - 1), 269, TESTCOLOR)
+			}
+			sc.Renderer.draw_Line_DDA((i - 1) * w / (len - 1), 270 - lossarr1[i - 1][0], (i) * w / (len - 1), 270 - lossarr1[i][0], SUN.Color.RGB(1, 1, 1))
+		}
+		if (lossarr1.length > 200) {
+			lossarr1.shift();
+		}
+	}
+
+	gameconsole.run()
+</script>
+
+</html>

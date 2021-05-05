@@ -41,9 +41,9 @@
 	}
 </style>
 
-<script type="text/javascript" src="./MNIST_DATA.json"></script>
-<script type="text/javascript" src="./MNIST_TEST.json"></script>
-<script type="text/javascript" src="./weights_relu5.json"></script>
+<!-- <script type="text/javascript" src="./MNIST_DATA.json"></script>
+<script type="text/javascript" src="./MNIST_TEST.json"></script> -->
+<script type="text/javascript" src="./weights_test4.json"></script>
 
 <script type="module">
 	import * as SUN from './GBsun.js'
@@ -91,6 +91,7 @@
 		// test.draw(sc.Renderer, 5, 10, WHITE, 1)
 		let starty = 10
 		let y = 0
+		const m = 1
 		for (let c = 0; c < 16; c++) {
 			let ans = []
 			for (let i = 0; i < 28; i++) {
@@ -100,10 +101,10 @@
 					let w = WEIGHT[0][c].fromw[id]
 					let color
 					if (w < 0) {
-						color = SUN.Color.RGB(Math.abs(w) * 3, 0, 0)
+						color = SUN.Color.RGB(Math.abs(w) * m, 0, 0)
 					}
 					else {
-						color = SUN.Color.RGB(0, Math.abs(w) * 3, 0)
+						color = SUN.Color.RGB(0, Math.abs(w) * m, 0)
 					}
 					// let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, w), 0, 1)
 					// let color = SUN.Color.RGB(1 - percent, percent, 0)
@@ -124,10 +125,10 @@
 					let w = WEIGHT[1][c].fromw[id]
 					let color
 					if (w < 0) {
-						color = SUN.Color.RGB(Math.abs(w) * 2, 0, 0)
+						color = SUN.Color.RGB(Math.abs(w) * m, 0, 0)
 					}
 					else {
-						color = SUN.Color.RGB(0, Math.abs(w) * 2, 0)
+						color = SUN.Color.RGB(0, Math.abs(w) * m, 0)
 					}
 					// let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, w), 0, 1)
 					// let color = SUN.Color.RGB(1 - percent, percent, 0)
@@ -156,10 +157,10 @@
 						sum += w * w2
 					}
 					if (sum < 0) {
-						color = SUN.Color.RGB(Math.abs(sum) * 2, 0, 0)
+						color = SUN.Color.RGB(Math.abs(sum) * m, 0, 0)
 					}
 					else {
-						color = SUN.Color.RGB(0, Math.abs(sum) * 2, 0)
+						color = SUN.Color.RGB(0, Math.abs(sum) * m, 0)
 					}
 					list.push(color)
 					list2.push(sum)
@@ -181,10 +182,10 @@
 					let w = WEIGHT[2][c].fromw[id]
 					let color
 					if (w < 0) {
-						color = SUN.Color.RGB(Math.abs(w) * 2, 0, 0)
+						color = SUN.Color.RGB(Math.abs(w) * m, 0, 0)
 					}
 					else {
-						color = SUN.Color.RGB(0, Math.abs(w) * 2, 0)
+						color = SUN.Color.RGB(0, Math.abs(w) * m, 0)
 					}
 					// let percent = SUN.Fn.clamp(SUN.Fn.percent(-1, 1, w), 0, 1)
 					// let color = SUN.Color.RGB(1 - percent, percent, 0)
@@ -210,10 +211,37 @@
 						sum += w * w2
 					}
 					if (sum < 0) {
-						color = SUN.Color.RGB(Math.abs(sum) * 2, 0, 0)
+						color = SUN.Color.RGB(Math.abs(sum) * m, 0, 0)
 					}
 					else {
-						color = SUN.Color.RGB(0, Math.abs(sum) * 2, 0)
+						color = SUN.Color.RGB(0, Math.abs(sum) * m, 0)
+					}
+					list.push(color)
+				}
+				ans.push(list)
+			}
+			sc.Renderer.draw_Sprite(10 + c * 30, starty + y * 40, new SUN.Sprite(ans))
+		}
+
+		y = 5
+		for (let c = 0; c < 10; c++) {
+			let ans = []
+			for (let i = 0; i < 28; i++) {
+				let list = []
+				let list2 = []
+				for (let j = 0; j < 28; j++) {
+					let sum = 0
+					let color
+					for (let c2 = 0; c2 < 16; c2++) {
+						let w = last[c2][i][j]
+						let w2 = WEIGHT[2][c].fromw[c2]
+						sum += w * w2
+					}
+					if (sum < 0) {
+						color = SUN.Color.RGB(0, 0, 0)
+					}
+					else {
+						color = SUN.Color.RGB(Math.abs(sum) * m, Math.abs(sum) * m, Math.abs(sum) * m)
 					}
 					list.push(color)
 				}

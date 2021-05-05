@@ -43,7 +43,7 @@
 
 <script type="text/javascript" src="./MNIST_DATA.json"></script>
 <script type="text/javascript" src="./MNIST_TEST.json"></script>
-<script type="text/javascript" src="./weights_relu4.json"></script>
+<script type="text/javascript" src="./weights_relu6-1.json"></script>
 
 <script type="module">
 	import * as SUN from './GBsun.js'
@@ -162,13 +162,45 @@
 				for (let j = 1; j <= 28; j++) {
 					let id = (i - 1) * 28 + j
 					let a = data.image[id - 1]
-					input['I' + id] = a / 255
-					list.push(SUN.Color.RGB(1, 1, 1, a / 255))
+					input['I' + id] = a > 0.97 ? 1 : 0
+					list.push(SUN.Color.RGB(1, 1, 1, a > 0.97 ? 1 : 0))
 				}
 				img.push(list)
 			}
 			out = NN.forward(ns, input)
 			target = data.label
+		}
+		if (sc.Keyboard.keymap['t'] && sc.Keyboard.keymap['t'].once) {
+			let correct = 0;
+			for (let i = 0; i < TEST.length; i++) {
+				let data = TEST[i];
+				let input = {}
+				for (let i = 1; i <= 28; i++) {
+					let list = []
+					for (let j = 1; j <= 28; j++) {
+						let id = (i - 1) * 28 + j
+						let a = data.image[id - 1]
+						input['I' + id] = a > 0.97 ? 1 : 0
+						list.push(SUN.Color.RGB(1, 1, 1, a > 0.97 ? 1 : 0))
+					}
+					img.push(list)
+				}
+				out = NN.forward(ns, input)
+				let max = out['IS 0'];
+				let maxnum = 0;
+				for (let i = 1; i <= 9; i++) {
+					if (out['IS ' + i] > max) {
+						max = out['IS ' + i]
+						maxnum = i
+					}
+				}
+				if (data.label === maxnum) correct++;
+				if (i % 100 === 0) {
+					console.log(`${i} of ${TEST.length}`, correct * 100 / (i + 1))
+				}
+			}
+			console.log("accuracy: ", correct * 100 / TEST.length)
+
 		}
 		if (sc.Keyboard.keymap['d'] && sc.Keyboard.keymap['d'].once) {
 			draw = true;

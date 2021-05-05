@@ -333,6 +333,18 @@ export const SIGMOID = {
 	}
 }
 
+export const LINEAR = {
+	f: (x) => {
+		return x;
+	},
+	dF: (x) => {
+		return 1;
+	},
+	func: (x, e) => {
+		return x
+	}
+}
+
 export const STEP = {
 	f: (x) => {
 		return x > 0 ? 1 : 0;
